@@ -248,6 +248,7 @@ class PixelTrip {
   this.stride=0;this.beatLen=.5;this.lastKick=-9;this.gait=.5;this.hype=0;this.eFast=0;this.eSlow=0;this.dropCool=6;this.timerCount=0;
   this.runner={x:70,y:0,vy:0,rot:0,spin:0,lane:0};this.items=[];this.parts=[];this.props3d=[];this.nextProp=0;this.rings=[];this.bolts=[];this.boltFlash=0;this.flock=null;this.flockCool=5;this.boing=null;
   this.event=null;this.lastEvent='';this.eventCool=10;this.glitchCool=0;this.ripple={t:9,x:this.CX,y:72,amp:0};this.flash=0;this.shake=0;
+  this.mate={mode:'none',x:this.W+40,y:0,lane:.5,z:30,vis:0};this.thread=false;
  }
  startIntro(){this.reset();}
  begin(){this.phase='run';this.phaseT=0;this.worldT=0;this.viewT=0;this.ripple={t:0,x:this.CX,y:72,amp:1};this.flash=.45;}
@@ -255,6 +256,14 @@ class PixelTrip {
  newWorld(i){this.world=i??this.pickWorld();this.worldT=0;this.ripple={t:0,x:this.view==='side'?this.runner.x:this.CX,y:this.view==='side'?110:120,amp:1.1};this.flash=.45;this.event=null;this.items.length=0;this.burst(this.runner.x,104,16);}
  // Camera swing: the picture yaws away, the world and the camera change at the midpoint, and it swings back in.
  spin(to,world){if(this.cam||this.phase!=='run')return false;this.cam={t:0,dur:1.3,to:to||(this.view==='side'?'behind':'side'),next:world??this.pickWorld(),dir:this.rand()<.5?-1:1,switched:false};return true;}
+ // Story cues: a second hero far ahead or running alongside, and a red thread tied to the hero's hand.
+ setStory(o={}){const m=this.mate;if(o.mate&&o.mate!==m.mode){if(m.mode==='none'){m.x=this.W+40;m.z=30;m.vis=0;}m.mode=o.mate;}if('thread' in o)this.thread=!!o.thread;}
+ stepMate(dt){
+  const m=this.mate,R=this.runner,k=1-Math.exp(-dt*(m.mode==='together'?1.6:1));
+  if(this.view==='side'){const tx=m.mode==='together'?R.x+18:m.mode==='far'?this.W-22+Math.sin(this.time*.6)*6:this.W+44;m.x+=(tx-m.x)*k;m.y=m.mode==='together'?R.y:Math.max(0,m.y-dt*80);}
+  else{m.lane+=((m.mode==='together'?.5:.25)-m.lane)*k;m.z+=((m.mode==='far'?10+Math.sin(this.time*.4)*2:m.mode==='together'?0:40)-m.z)*(1-Math.exp(-dt*.9));m.y=m.mode==='together'?R.y:0;}
+  m.vis=m.mode==='none'?Math.max(0,m.vis-dt*.6):Math.min(1,m.vis+dt);
+ }
  // Director cues for scripted videos: change world with a portal, a camera swing or a hard cut.
  goWorld(i,how='portal'){if(how==='spin')return this.spin(this.view,i);if(i===this.world)return false;if(how==='cut'){this.world=i;this.worldT=0;this.items.length=0;return true;}this.newWorld(i);return true;}
  surprise(type){
@@ -300,7 +309,7 @@ class PixelTrip {
   this.stride+=dt/this.beatLen;if(newKick){const f=this.stride%1;this.stride+=(f>.5?1-f:-f)*.6;}
   if(this.phase==='intro'){if(newKick&&this.kickStrength>.85&&this.elec>0&&this.rand()<.3)this.bolt();if(this.phaseT>=(control.intro??8))this.begin();return;}
   this.worldT+=dt;this.viewT+=dt;
-  if(this.cam){const c=this.cam;c.t+=dt;if(!c.switched&&c.t>=c.dur/2){c.switched=true;this.view=c.to;this.viewT=0;this.world=c.next;this.worldT=0;this.items.length=0;this.props3d.length=0;this.nextProp=this.z+1.5;this.rings.length=0;Object.assign(R,{y:0,vy:0,rot:0,spin:0,lane:0});this.event=null;}if(c.t>=c.dur)this.cam=null;}
+  if(this.cam){const c=this.cam;c.t+=dt;if(!c.switched&&c.t>=c.dur/2){c.switched=true;const m=this.mate;if(m.mode!=='none'){m.z=m.mode==='far'?10:0;m.x=m.mode==='far'?this.W-22:this.runner.x+18;}this.view=c.to;this.viewT=0;this.world=c.next;this.worldT=0;this.items.length=0;this.props3d.length=0;this.nextProp=this.z+1.5;this.rings.length=0;Object.assign(R,{y:0,vy:0,rot:0,spin:0,lane:0});this.event=null;}if(c.t>=c.dur)this.cam=null;}
   const ev=this.event?.type,target=(15+bass*40+energy*26+this.hype*32)*(control.speed??1)*(ev==='rainbow'?1.5:1);
   this.speed+=(target-this.speed)*(1-Math.exp(-dt*2.5));this.dist+=this.speed*dt;this.z+=this.speed*.055*dt;
   if(newKick)this.shake=(1+this.kickStrength*1.4)*this.pulse;
@@ -309,6 +318,7 @@ class PixelTrip {
   if(director){}else if(section&&!this.cam){if(camMode==='auto'&&this.viewT>14&&this.rand()<.5)this.spin();else this.newWorld();}
   else if(this.worldT>(control.world??40)&&!this.cam){this.timerCount++;if(camMode==='auto'&&this.timerCount%2===0)this.spin();else this.newWorld();}
   if(this.view==='side')this.stepSide(dt,a,newKick);else this.stepBehind(dt,a,newKick);
+  this.stepMate(dt);
   if(this.voice>.3&&this.rand()<dt*5*this.voice){const side=this.view==='side',x=side?R.x+5:this.CX+R.lane*44+4,y=side?this.groundY(R.x)-R.y-26:this.H-34-R.y;this.parts.push({x,y,vx:side?-12-this.speed*.25:(this.rand()-.5)*16,vy:-16-this.rand()*10,life:1.3,c:-3,g:0});this.trim();}
   if(this.elec>0&&newKick&&this.kickStrength>.72&&energy>.5&&this.rand()<.3*this.elec)this.bolt();
   // Surprise events, paced by the music's energy and kept rare.
@@ -349,7 +359,7 @@ class PixelTrip {
   for(let i=this.rings.length-1;i>=0;i--)if(this.rings[i].z-this.z<.3)this.rings.splice(i,1);
   if(a.spark>.42&&!this.sparkHigh&&this.items.length<4&&this.rand()<.7)this.items.push({z:this.z+28,X:[-.55,0,.55][Math.floor(this.rand()*3)],k:Math.floor(this.rand()*3)});
   this.sparkHigh=a.spark>(this.sparkHigh?.3:.42);
-  let goal=Math.sin(this.time*.5)*.35;for(const it of this.items){const rz=it.z-this.z;if(rz<12){goal=it.X;break;}}
+  let goal=this.mate.mode==='together'?-.3:Math.sin(this.time*.5)*.35;for(const it of this.items){const rz=it.z-this.z;if(rz<12){goal=it.X;break;}}
   R.lane+=(goal-R.lane)*(1-Math.exp(-dt*3));
   for(let i=this.items.length-1;i>=0;i--){const it=this.items[i],rz=it.z-this.z;if(rz<1.1){if(Math.abs(it.X-R.lane)<.35)this.burst(this.CX+R.lane*44,110,10);this.items.splice(i,1);}}
   if(newKick&&R.y<=0&&ks>.85)R.vy=70+ks*40;
@@ -362,7 +372,7 @@ class PixelTrip {
   const conv=hex=>{let c=PixelTrip.rgb(hex);if(h)c=PixelTrip.hue(c,h);if(tint){const l=c[0]*.3+c[1]*.59+c[2]*.11;c=c.map((v,i)=>v*.35+tint[i]*l*1.1);}const g=c[0]*.3+c[1]*.59+c[2]*.11;return PixelTrip.pack(c.map(v=>g+(v-g)*sat));};
   const fixed=hex=>{const c=PixelTrip.rgb(hex),g=c[0]*.3+c[1]*.59+c[2]*.11;return PixelTrip.pack(c.map(v=>g+(v-g)*sat));};
   const hero=k=>Object.fromEntries(Object.entries(PixelTrip.hero[k]).map(([n,v])=>[n,fixed(v)]));
-  this.C={sky:w.sky.map(conv),sun:w.sun.map(conv),far:conv(w.far),near:conv(w.near),ground:w.ground.map(conv),pc:w.pc.map(conv),hero:{m:hero('m'),f:hero('f')},ink:fixed('#1b0f24'),fx:PixelTrip.fx.map(fixed),whale:PixelTrip.whale.map(conv)};
+  this.C={sky:w.sky.map(conv),sun:w.sun.map(conv),far:conv(w.far),near:conv(w.near),ground:w.ground.map(conv),pc:w.pc.map(conv),hero:{m:hero('m'),f:hero('f')},ink:fixed('#1b0f24'),fx:PixelTrip.fx.map(fixed),whale:PixelTrip.whale.map(conv),thread:fixed('#ff2440'),threadGlow:fixed('#ff8a9a')};
  }
  ramp(arr,f,x,y){const i=Math.floor(f+PixelTrip.dither[(x&3)|((y&3)<<2)]);return arr[i<0?0:i>=arr.length?arr.length-1:i];}
  draw(palette,control={},saturation=1){
@@ -382,9 +392,9 @@ class PixelTrip {
   if(ev==='whale')this.drawWhale();
   if(ev!=='tunnel')this.drawSun(ev==='sun',Math.round(PixelTrip.worlds[this.world].sunX*this.W/192),64,17);
   this.drawClouds(1);if(ev==='eye')this.drawEye();this.drawFlock();
-  this.drawHills();this.drawBolts();this.drawGroundSide();this.drawPropsSide();
-  if(ev==='rain')this.drawRain();
-  this.drawItemsSide();this.drawRunnerSide(kind,ev);this.drawParts();this.drawTufts();
+  if(PixelTrip.worlds[this.world].skyline)this.drawSkyline();else this.drawHills();this.drawBolts();this.drawGroundSide();this.drawPropsSide();
+  if(ev==='rain')this.drawRain();if(PixelTrip.worlds[this.world].rain)this.drawRainLines();
+  this.drawItemsSide();this.drawMateSide(kind);this.drawRunnerSide(kind,ev);this.drawThread();this.drawParts();this.drawTufts();
  }
  drawBehind(control,ev,kind){
   const HZ=PixelTrip.HZB;
@@ -393,14 +403,14 @@ class PixelTrip {
   if(ev!=='tunnel')this.drawSun(ev==='sun',Math.round(this.CX-this.curve*22),HZ-6,20);
   this.drawClouds(.6);if(ev==='eye')this.drawEye();
   this.drawHorizon();this.drawBolts();this.drawGroundBehind();this.drawRings(true);this.drawProps3d();this.drawRings(false);this.drawItemsBehind();
-  if(ev==='rain')this.drawRain();
+  if(ev==='rain')this.drawRain();if(PixelTrip.worlds[this.world].rain)this.drawRainLines();
   if(this.hype>.3||ev==='rainbow')this.drawWarpLines();
-  this.drawRunnerBack(kind,ev);this.drawParts();
+  this.drawMateBack(kind);this.drawRunnerBack(kind,ev);this.drawThread();this.drawParts();
  }
  // ───── Sky: dithered gradient bent by slow liquid patterns ─────
  drawSky(control,ev,HZ,cy){
   const W=this.W,CX=this.CX,buf=this.buf,t=this.time,sky=this.C.sky,mid=this.audio[1],warp=(control.warp??1)*(1+this.hype*.8),world=PixelTrip.worlds[this.world];
-  const amp=warp*(1.2+mid*6),lift=Math.exp(-this.kickAge*6)*.35*this.pulse+(this.reduce?0:this.boltFlash*4),str=(.3+.4*warp*(.3+mid))*(1+this.audio[3]*.4),pat=ev==='tunnel'?6:world.pattern,scroll=this.dist*.04,span=Math.min(HZ,104);
+  const calm=world.calm?.5:1,amp=warp*(1.2+mid*6)*calm,lift=Math.exp(-this.kickAge*6)*.35*this.pulse+(this.reduce?0:this.boltFlash*4),str=(.3+.4*warp*(.3+mid))*(1+this.audio[3]*.4)*(world.calm?.6:1),pat=ev==='tunnel'?6:world.pattern,scroll=this.dist*.04,span=Math.min(HZ,104);
   for(let y=0;y<HZ;y++){
    const flip=(pat&1)&&(y&1)?-1:1,ox=amp*Math.sin(y*.12+t*2.1)*flip,Y=y+warp*1.5*Math.sin(t*1.3+y*.04),base=y/span*4.4-.3+lift;
    for(let x=0;x<W;x++){
@@ -421,12 +431,13 @@ class PixelTrip {
  }
  // Aurora curtains: each column follows a band of the spectrum, mirrored around the center.
  drawAurora(baseY){
-  const W=this.W,C=this.C,cols=this.W>>2,amt=(.55+this.elec*.45)*(1+(this.voice||0)*.5),off=this.dist*.03+this.time*2;
+  const calm=PixelTrip.worlds[this.world].calm,W=this.W,C=this.C,cols=this.W>>2,amt=(.55+this.elec*.45)*(1+(this.voice||0)*.5)*(calm?.45:1),off=this.dist*.03+this.time*2;
   for(let i=0;i<cols;i++){const b=this.bands[Math.min(15,Math.floor(Math.abs(i-cols/2+.5)/(cols/2)*16))],h=Math.round((4+b*46*amt)*(1+this.hype*.4));
-   const x0=Math.round(((i*4-off)%W+W)%W),col=(i>>2)&1?C.pc[5]:C.sun[1];
+   const x0=Math.round(((i*4-off)%W+W)%W),col=calm?C.sky[4]:(i>>2)&1?C.pc[5]:C.sun[1];
    for(let y=baseY-h;y<=baseY;y++){const f=(baseY-y)/h;for(let k=0;k<4;k++){const x=(x0+k)%W;if(PixelTrip.dither[(x&3)|((y&3)<<2)]>f*.95+.15)this.px(x,y,f<.25?C.sky[4]:col);}}}
  }
  drawSun(face,cx,cy0,r0){
+  if(PixelTrip.worlds[this.world].disco){this.drawDisco(cx,Math.min(cy0-8,this.view==='side'?32:cy0-8),Math.round(r0*.8));return;}
   const w=PixelTrip.worlds[this.world],C=this.C,e=this.event,rise=face?Math.min(1,e.t/1.2,(e.dur-e.t)/1.2):0,cy=Math.round(cy0-rise*20),r=Math.round(r0+this.audio[0]*3*(.4+this.elec*.6)+rise*3),t=this.time,halo=6+this.audio[3]*5+this.hype*4;
   for(let y=cy-r-halo;y<=cy+r+halo;y++)for(let x=cx-r-halo;x<=cx+r+halo;x++){
    const d=Math.hypot(x-cx,y-cy);
@@ -462,7 +473,8 @@ class PixelTrip {
  }
  drawHorizon(){
   const W=this.W,buf=this.buf,C=this.C,HZ=PixelTrip.HZB,sh=this.curve*30;
-  for(let x=0;x<W;x++){const xf=x+sh,top=Math.round(HZ-(5+4*Math.sin(xf*.045)+2*Math.sin(xf*.12+1)));for(let y=Math.max(0,top);y<=HZ;y++)buf[y*W+x]=y===top?C.sky[3]:C.far;}
+  const city=PixelTrip.worlds[this.world].skyline;
+  for(let x=0;x<W;x++){const xf=x+sh,bi=Math.floor(xf/7),top=Math.round(city?HZ-(3+this.hash(bi*7)*15):HZ-(5+4*Math.sin(xf*.045)+2*Math.sin(xf*.12+1)));for(let y=Math.max(0,top);y<=HZ;y++)buf[y*W+x]=y===top?C.sky[3]:city&&(Math.floor(xf)%3===1)&&(y%3===1)&&this.hash(bi*31+y)<.3?C.pc[4]:C.far;}
  }
  line(x0,y0,x1,y1,c){const n=Math.max(1,Math.ceil(Math.max(Math.abs(x1-x0),Math.abs(y1-y0))));for(let i=0;i<=n;i++)this.px(x0+(x1-x0)*i/n,y0+(y1-y0)*i/n,c);}
  drawBolts(){
@@ -481,10 +493,13 @@ class PixelTrip {
   }
  }
  bounceOf(k){const b=Math.exp(-this.kickAge*7)*this.elec*.9;return this.boing&&this.boing.k===k?b+Math.sin(this.boing.t*25)*Math.exp(-this.boing.t*6)*1.2:b;}
- drawPropsSide(){const k0=Math.floor((this.dist-60)/PixelTrip.PROP);for(let k=k0;k<k0+5;k++){const p=this.sideProp(k);if(!p||p.x<-40||p.x>this.W+40)continue;const x=Math.round(p.x);this[p.type](x,Math.round(this.groundY(x))+1,p.s,k,this.bounceOf(k));}}
+ drawPropsSide(){const k0=Math.floor((this.dist-60)/PixelTrip.PROP);let prev=null;for(let k=k0-1;k<k0+7;k++){const p=this.sideProp(k);if(!p)continue;const x=Math.round(p.x),base=Math.round(this.groundY(Math.max(0,Math.min(this.W-1,x))))+1;
+  if(p.type==='pole'){const tips=this.poleTips(x,base,p.s);if(prev)tips.forEach((t,i)=>this.cable(prev[i],t,i===1?this.C.thread:this.C.pc[0],7+i*2));prev=tips;}
+  if(p.x<-40||p.x>this.W+40)continue;this[p.type](x,base,p.s,k,this.bounceOf(k));}}
  drawProps3d(){
-  const type=PixelTrip.worlds[this.world].prop,HZ=PixelTrip.HZB,list=this.props3d.slice().sort((a,b)=>b.z-a.z);
+  const type=PixelTrip.worlds[this.world].prop,HZ=PixelTrip.HZB,list=this.props3d.slice().sort((a,b)=>b.z-a.z),last={};
   for(const p of list){const Z=p.z-this.z;if(Z<.45||Z>34)continue;const cz=this.curve*Z*Z*.02,x=Math.round(this.CX+(p.X-cz)*64/Z),y=Math.round(HZ+PixelTrip.CAMH/Z),s=1.7/Z*p.s;
+   if(type==='pole'){const side=p.X<0?0:1,tips=this.poleTips(x,y,s);if(last[side])tips.forEach((t,i)=>this.cable(last[side][i],t,i===1?this.C.thread:this.C.pc[0],2+s*3));last[side]=tips;}
    if(x<-60||x>this.W+60)continue;if(s<.22){this.px(x,y-1,this.C.pc[2]);this.px(x,y-2,this.C.pc[3]);continue;}this[type](x,y,s,p.k,Math.exp(-this.kickAge*7)*this.elec*.9);}
  }
  mush(x,base,s,k,b){
@@ -531,24 +546,65 @@ class PixelTrip {
   for(let i=0;i<6;i++){const a=a0+i*Math.PI/3;this.orb(x+Math.cos(a)*pr,cy+Math.sin(a)*pr,3*s,3*s,[pc[2],pc[3]],pc[0]);}
   this.orb(x,cy,3*s,3*s,[pc[5],pc[4]],pc[0]);
  }
+
+ // City worlds: two layers of buildings; the far one has windows that follow the energy and flash on kicks.
+ drawSkyline(){
+  const W=this.W,buf=this.buf,C=this.C,d=this.dist,e=this.audio[3],lit=this.kickAge<.12;
+  for(const [sp,baseY,hmax,col,rim,wins]of [[.08,98,44,C.far,C.sky[3],true],[.22,106,24,C.near,C.far,false]])
+   for(let x=0;x<W;x++){const xw=x+d*sp,bi=Math.floor(xw/13),f=xw/13-bi;if(f>.55+this.hash(bi*13+(wins?3:5))*.45)continue;const top=Math.round(baseY-8-this.hash(bi*7+(wins?1:2))*hmax);
+    for(let y=Math.max(0,top);y<120;y++){let c=y===top?rim:col;if(wins&&y>top+2&&Math.floor(xw)%3===1&&y%4===2&&this.hash(bi*131+y*7+Math.floor(xw/3)*17+Math.floor(this.time*.5))<.2+e*.3)c=lit?C.pc[6]:C.pc[4];buf[y*W+x]=c;}}
+ }
+ // A mirror ball: rotating facets, sweeping spotlights and reflections that crawl over the sky.
+ drawDisco(cx,cy,r){
+  const C=this.C,pc=C.pc,t=this.time,beams=[pc[5],pc[6],C.sky[4],pc[4],pc[5]];
+  for(let i=0;i<5;i++){const a=Math.PI*.5+Math.sin(t*.6+i*1.3)*1.15,len=150,col=beams[i],amt=.2*(.5+this.audio[3]+(this.kickAge<.15?.4:0));
+   for(let st=r+2;st<len;st++){const x=cx+Math.cos(a)*st,y=cy+Math.sin(a)*st,w=st*.06;for(let k=-w;k<=w;k++){const px=x-Math.sin(a)*k,py=y+Math.cos(a)*k;if(PixelTrip.dither[((px|0)&3)|(((py|0)&3)<<2)]<amt*(1-st/len))this.px(px,py,col);}}}
+  this.rect(cx,0,1,Math.max(0,cy-r),C.sky[3]);
+  for(let y=-r-1;y<=r+1;y++)for(let x=-r-1;x<=r+1;x++){const d=(x*x+y*y)/(r*r);if(d>1){if((x*x+y*y)<=(r+1)*(r+1))this.px(cx+x,cy+y,C.ink);continue;}
+   const fx=Math.floor((x+t*6)/3),fy=Math.floor((y+r)/3),h=this.hash(fx*31+fy*7+Math.floor(t*8));let c=(fx+fy)&1?C.sun[1]:C.sun[2];if(-.5*x/r-.6*y/r>.25)c=C.sun[0];if(h<.08+this.audio[2]*.25)c=0xffffffff;this.px(cx+x,cy+y,c);}
+  for(let i=0;i<36;i++){const a=this.hash(i)*6.283+t*.35,rr=18+this.hash(i+50)*130,x=cx+Math.cos(a)*rr*1.4,y=cy+Math.sin(a)*rr*.55;const c=[pc[5],pc[6],0xffffffff][i%3];this.px(x,y,c);if(this.kickAge<.15){this.px(x+1,y,c);this.px(x,y+1,c);}}
+ }
+ drawRainLines(){const t=this.time,c=this.C.sky[4],H=this.H,W=this.W;for(let i=0;i<70;i++){const sp=150+this.hash(i)*60,y=(this.hash(i+7)*H+t*sp)%(H+12)-6,x=((this.hash(i+3)*W*1.3-y*.35-this.dist*.5)%W+W)%W;for(let k=0;k<4;k++)if(PixelTrip.dither[(((x-k*.35)|0)&3)|((((y+k)|0)&3)<<2)]<.75)this.px(x-k*.35,y+k,c);}}
+ lamp(x,base,s,k,b){
+  const pc=this.C.pc,h=Math.round(32*s),top=base-h,hx=x+Math.round(5*s),glow=.45+b*.4+this.audio[0]*.25;
+  for(let y=top+3;y<=base;y++){const w=(y-top-3)*.42;for(let i=-w;i<=w;i++)if(PixelTrip.dither[((hx+i)&3)|((y&3)<<2)]<glow*.4*(1-(y-top)/(h*1.4)))this.px(hx+i,y,pc[4]);}
+  this.rect(x-1,top,3,h+1,pc[0]);this.rect(x,top,1,h,pc[2]);this.rect(x-1,top-1,Math.round(7*s)+1,2,pc[0]);this.rect(x,top-1,Math.round(6*s),1,pc[3]);
+  this.rect(hx-2,top+1,5,2,pc[1]);this.rect(hx-1,top+3,3,1,pc[4]);
+  for(let j=top+8;j<base-4;j+=9)this.px(x,j,b>.3?pc[6]:pc[5]);
+ }
+ speaker(x,base,s,k,b){
+  const pc=this.C.pc,pump=Math.exp(-this.kickAge*9)*(.5+this.elec*.5),w=Math.max(4,Math.round(14*s)),stack=this.hash(k*5)>.4?2:1;
+  for(let n=0;n<stack;n++){const h=Math.max(5,Math.round((n?16:22)*s)),cw=n?w-2:w,x0=x-(cw>>1),y0=base-h-(n?Math.round(22*s):0);
+   this.rect(x0-1,y0-1,cw+2,h+2,pc[0]);this.rect(x0,y0,cw,h,pc[2]);this.rect(x0,y0,1,h,pc[3]);this.rect(x0+cw-1,y0,1,h,pc[1]);
+   if(s>.35){const r1=Math.max(1,2.4*s),r2=Math.max(1.5,(n?3.5:4.6)*s*(1+pump*.22));this.orb(x,y0+h*.28,r1,r1,[pc[1],pc[3]],pc[0]);this.orb(x,y0+h*.68,r2,r2,[pc[1],pc[2],pc[3]],pc[0]);this.px(x,y0+h*.68,pump>.5?pc[6]:pc[4]);if(pump>.6)this.rect(x0+1,y0+h-2,cw-2,1,pc[5]);}}
+ }
+ pole(x,base,s,k,b){const pc=this.C.pc,h=Math.round(46*s),top=base-h,a=Math.max(3,Math.round(7*s));this.rect(x-1,top,3,h+1,pc[1]);this.rect(x-1,top,1,h,pc[2]);this.rect(x-a,top+3,a*2+1,2,pc[1]);this.px(x-a,top+2,pc[4]);this.px(x+a,top+2,pc[4]);this.px(x,top-1,pc[4]);}
+ poleTips(x,base,s){const h=Math.round(46*s),top=base-h,a=Math.max(3,Math.round(7*s));return [[x-a,top+2],[x,top-1],[x+a,top+2]];}
+ cable(a,b,c,sag){const n=Math.max(2,Math.ceil(Math.abs(b[0]-a[0])+Math.abs(b[1]-a[1])));for(let i=0;i<=n;i++){const t=i/n;this.px(a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t+sag*4*t*(1-t),c);}}
  // ───── Ground ─────
  drawGroundSide(){
-  const W=this.W,H=this.H,buf=this.buf,g=this.C.ground,d=this.dist,neon=PixelTrip.worlds[this.world].grid;
+  const W=this.W,H=this.H,buf=this.buf,g=this.C.ground,pc=this.C.pc,d=this.dist,world=PixelTrip.worlds[this.world],neon=world.grid,floor=world.floor,under=Math.floor((this.runner.x+d)/16),stepLit=this.kickAge<.35,disco=[pc[5],pc[6],this.C.sky[4],pc[4]];
   for(let x=0;x<W;x++){const top=Math.round(this.groundY(x)),xw=Math.floor(x+d);
    for(let y=Math.max(0,top);y<H;y++){const k=y-top;let c;
     if(k===0)c=g[0];else if(k<3)c=g[1];
     else{c=this.ramp(g,1.4+Math.min(1,k/34)*3,x,y);
      if(neon){if(k%7===3||xw%16===0)c=g[0];}
+     else if(floor==='hopscotch'){const sq=Math.floor(xw/16),inn=xw-sq*16;if(k>=2&&k<=9&&inn>=2&&inn<=13){const edge=inn===2||inn===13||k===2||k===9;if(edge||sq===under&&stepLit)c=sq&1?pc[5]:pc[6];else if(sq===under)c=g[1];}}
+     else if(floor==='dance'){if(xw%10===0||k%4===0)c=g[4];else{const h=this.hash(Math.floor(xw/10)*31+(k>>2)*977+this.kickCount*7);if(h<.16+this.audio[3]*.2)c=disco[Math.floor(h*97)%4];}}
+     else if(floor==='wet'){if(k%5===2&&this.hash(Math.floor((x+d*(1+k*.012))/9)*7+(k>>2)*131)<.25)c=this.C.sky[3];}
      else if(k%4===2){const u=(x+d*(1+k*.012))/11,tile=Math.floor(u);if(this.hash(tile*7+(k>>2)*131)<.14&&u-tile<.22)c=g[0];}}
     buf[y*W+x]=c;}
-   if(!neon&&xw%7<2)this.px(x,top-1,g[1]);}
+   if(!neon&&!floor&&xw%7<2)this.px(x,top-1,g[1]);}
   const R=this.runner,gy=Math.round(this.groundY(R.x))+1,sw=Math.max(2,7-R.y*.12);for(let i=-sw;i<=sw;i++)this.px(R.x+i,gy,g[4]);
  }
  drawGroundBehind(){
-  const W=this.W,CX=this.CX,H=this.H,buf=this.buf,g=this.C.ground,HZ=PixelTrip.HZB,neon=PixelTrip.worlds[this.world].grid,fogC=this.C.sky[3],kick=this.kickAge<.12;
+  const W=this.W,CX=this.CX,H=this.H,buf=this.buf,g=this.C.ground,pc=this.C.pc,HZ=PixelTrip.HZB,world=PixelTrip.worlds[this.world],floor=world.floor,disco=[pc[5],pc[6],this.C.sky[4],pc[4]],under=Math.floor((this.z+1.4)*.9),neon=world.grid,fogC=this.C.sky[3],kick=this.kickAge<.12;
   for(let y=HZ+1;y<H;y++){const Z=PixelTrip.CAMH/(y-HZ),cz=this.curve*Z*Z*.02,fog=Math.min(1,Z/30),v=Z+this.z,stripe=Math.floor(v*.7)&1,pxw=Z/64;
    for(let x=0;x<W;x++){const X=(x-CX)*pxw+cz,ax=Math.abs(X);let c;
     if(neon){const gx=Math.abs(X-Math.round(X)),gv=(v*.5)%1;c=gx<pxw*1.2||gv<Z*.012?g[0]:stripe?g[3]:g[4];}
+    else if(floor==='dance'){const tx=Math.floor(X*1.6),tv=Math.floor(v*1.4);if(X*1.6-tx<pxw*1.6||v*1.4-tv<Z*.015)c=g[4];else{const h=this.hash(tx*31+tv*977+this.kickCount*7);c=h<.16+this.audio[3]*.2?disco[Math.floor(h*97)%4]:g[2];}}
+    else if(floor==='hopscotch'&&ax<1){const sq=Math.floor(v*.9),f=v*.9-sq;c=ax>.9?g[0]:g[2];if(ax<.75&&(f<.06||f>.94||ax>.68||sq===under&&this.kickAge<.3&&PixelTrip.dither[(x&3)|((y&3)<<2)]<.35))c=sq&1?pc[5]:pc[6];}
+    else if(floor==='wet'&&ax>=1){c=stripe?g[2]:g[3];if(this.hash(Math.floor(X*2)*977+Math.floor(v*1.5))<.12)c=this.C.sky[3];}
     else if(ax<1){c=ax>.9?g[0]:stripe?(kick?g[0]:g[1]):g[2];if(ax<pxw&&(Math.floor(v*1.4)&1))c=g[0];}
     else{c=stripe?g[2]:g[3];if(Z>3&&this.hash(Math.floor(X*3)*977+Math.floor(v*2))<.05)c=g[1];}
     if(PixelTrip.dither[(x&3)|((y&3)<<2)]<fog*fog*.9)c=fogC;
@@ -605,6 +661,24 @@ class PixelTrip {
   if(ghost>0)for(let g=3;g>=1;g--){const col=this.C.fx[[4,5,0][g-1]],off=Math.round(-g*7*ghost);for(let j=0;j<RS;j++)for(let i=0;i<RS;i++)if(s2[j*RS+i]&&PixelTrip.dither[((i+off)&3)|((j&3)<<2)]>=g*.22)this.px(x0+i+off,y0+j,col);}
   for(let j=-1;j<=RS;j++)for(let i=-1;i<=RS;i++){if(at(i,j))continue;if(at(i-1,j)||at(i+1,j)||at(i,j-1)||at(i,j+1))this.px(x0+i,y0+j,ink);}
   for(let j=0;j<RS;j++)for(let i=0;i<RS;i++){const v=s2[j*RS+i];if(v)this.px(x0+i,y0+j,v);}
+ }
+
+ // The second hero is drawn with the same rig, half a stride out of phase.
+ withMate(fn){const R=this.runner,st=this.stride,m=this.mate;this.runner={x:m.x,y:m.y,vy:0,rot:0,spin:0,lane:m.lane};this.stride=st+.5;try{fn();}finally{this.runner=R;this.stride=st;}}
+ drawMateSide(kind){const m=this.mate;if(m.vis<=0||m.x>this.W+16)return;const feet=this.groundY(Math.max(0,Math.min(this.W-1,m.x)))-m.y;this.withMate(()=>{this.rigSide(kind==='m'?'f':'m');this.blitHero(m.x,feet-11,0,0);});}
+ drawMateBack(kind){
+  const m=this.mate;if(m.vis<=0)return;const k2=kind==='m'?'f':'m';
+  if(m.z<1.2){this.withMate(()=>{this.rigBack(k2);this.blitHero(this.CX+m.lane*44,this.H-6-11-m.y,0,0);});return;}
+  if(m.z>30)return;const Z=m.z+1,cz=this.curve*Z*Z*.02,x=Math.round(this.CX+(m.lane-cz)*64/Z),y=Math.round(PixelTrip.HZB+PixelTrip.CAMH/Z),H=this.C.hero[k2],ink=this.C.ink,step=Math.floor(this.stride*2)&1;
+  this.rect(x-3,y-10,7,11,ink);this.rect(x-2,y-10,5,3,H.hair);this.px(x-2,y-8,H.cup);this.px(x+2,y-8,H.cup);this.rect(x-2,y-7,5,3,H.top);this.rect(x-1,y-4,1,3+(step?0:-1),H.pants);this.rect(x+1,y-4,1,3+(step?-1:0),H.pants);
+  if(k2==='f')this.rect(x,y-7,1,3,H.hairShade);
+ }
+ drawThread(){
+  if(!this.thread)return;const R=this.runner,m=this.mate,c=this.C.thread,g=this.C.threadGlow,side=this.view==='side';let x0,y0,x1,y1;
+  if(side){const feet=this.groundY(R.x)-R.y;x0=R.x+5;y0=feet-12;if(m.vis>.5&&m.x<this.W+8){x1=m.x-5;y1=this.groundY(Math.max(0,Math.min(this.W-1,m.x)))-m.y-12;}else{x1=this.W+6;y1=feet-34+Math.sin(this.time*1.3)*5;}}
+  else{x0=this.CX+R.lane*44+6;y0=this.H-18-R.y;if(m.vis>.3&&m.z<1.2){x1=this.CX+m.lane*44-6;y1=this.H-18-m.y;}else if(m.vis>.3&&m.z<=30){const Z=m.z+1,cz=this.curve*Z*Z*.02;x1=this.CX+(m.lane-cz)*64/Z;y1=PixelTrip.HZB+PixelTrip.CAMH/Z-6;}else{x1=this.CX-this.curve*22;y1=PixelTrip.HZB+3;}}
+  const sag=(side?5:2)+Math.sin(this.time*2.1)*2,lit=this.kickAge<.12,n=Math.ceil(Math.hypot(x1-x0,y1-y0))+2;
+  for(let i=0;i<=n;i++){const t=i/n,x=x0+(x1-x0)*t,y=y0+(y1-y0)*t+sag*4*t*(1-t)+Math.sin(t*9-this.time*4)*1.1*t;this.px(x,y,c);if(lit||PixelTrip.dither[((x|0)&3)|(((y|0)&3)<<2)]<.3)this.px(x,y-1,g);}
  }
  drawRunnerSide(kind,ev){
   const R=this.runner,feet=this.groundY(R.x)-R.y,ghost=Math.max(this.hype,ev==='rainbow'?.8:0,this.gait>.85?.4:0);
@@ -681,7 +755,7 @@ class PixelTrip {
  snapshot(){
   const nums=['time','phaseT','dist','z','speed','world','worldT','viewT','stride','beatLen','gait','hype','kickAge','kickStrength','flash','shake','boltFlash','curve'];
   return {n:Object.fromEntries(nums.map(k=>[k,this[k]])),phase:this.phase,view:this.view,a:this.audio.slice(),b:Array.from(this.bands),r:{...this.runner},cam:this.cam?{...this.cam}:null,e:this.event?{...this.event}:null,rp:{...this.ripple},
-   it:this.items.map(i=>({...i})),p3:this.props3d.map(p=>({...p})),rg:this.rings.map(r=>({...r})),bo:this.bolts.map(b=>({life:b.life,pts:b.pts,branch:b.branch})),fl:this.flock?{...this.flock}:null,pa:this.parts.slice(-150).map(q=>[q.x,q.y,q.vx,q.vy,q.life,q.c,q.g])};
+   it:this.items.map(i=>({...i})),p3:this.props3d.map(p=>({...p})),rg:this.rings.map(r=>({...r})),bo:this.bolts.map(b=>({life:b.life,pts:b.pts,branch:b.branch})),fl:this.flock?{...this.flock}:null,mate:{...this.mate},thread:this.thread,pa:this.parts.slice(-150).map(q=>[q.x,q.y,q.vx,q.vy,q.life,q.c,q.g])};
  }
  restore(s){
   if(!s||typeof s.n!=='object'||!Array.isArray(s.pa)||!Array.isArray(s.it))return false;
@@ -691,7 +765,7 @@ class PixelTrip {
   const num=o=>o&&typeof o==='object'&&Object.values(o).every(v=>typeof v!=='number'||Number.isFinite(v));
   if(num(s.r))Object.assign(this.runner,s.r);this.cam=num(s.cam)&&(s.cam.to==='side'||s.cam.to==='behind')?{...s.cam}:null;
   this.event=s.e&&PixelTrip.events[s.e.type]?{...s.e}:null;if(num(s.rp))Object.assign(this.ripple,s.rp);
-  this.items=s.it.filter(num);this.props3d=(s.p3||[]).filter(num);this.rings=(s.rg||[]).filter(num);this.bolts=(s.bo||[]).filter(b=>Array.isArray(b.pts)&&Array.isArray(b.branch));this.flock=num(s.fl)?{...s.fl}:null;
+  this.items=s.it.filter(num);this.props3d=(s.p3||[]).filter(num);this.rings=(s.rg||[]).filter(num);this.bolts=(s.bo||[]).filter(b=>Array.isArray(b.pts)&&Array.isArray(b.branch));this.flock=num(s.fl)?{...s.fl}:null;if(num(s.mate)&&['none','far','together'].includes(s.mate.mode))this.mate={...s.mate};this.thread=!!s.thread;
   this.parts=s.pa.map(q=>({x:q[0],y:q[1],vx:q[2],vy:q[3],life:q[4],c:q[5],g:q[6]}));return true;
  }
 }
@@ -705,7 +779,10 @@ PixelTrip.worlds=[
  {pattern:2,prop:'pyramid',sunX:130,sky:['#200a33','#5a1650','#a8325e','#e8604f','#ffb35c'],sun:['#fffbe0','#ffe066','#ffa040'],far:'#8a2a5a',near:'#4f1640',ground:['#ffe9a8','#ffc46b','#e08a4a','#a8503a','#5c2a33'],pc:['#2a0f1f','#8a4a2a','#d9893a','#ffd27a','#fff4c8','#3af0d0','#0f3a3a']},
  {pattern:3,prop:'tower',sunX:96,stripes:true,stars:true,grid:true,sky:['#05030f','#120630','#2a0a52','#5c0f6e','#c41f7a'],sun:['#ffe45c','#ff8a3a','#ff2a7a'],far:'#1e0a3d',near:'#0e0520',ground:['#ff4fd8','#3a1060','#1c0838','#120526','#08020f'],pc:['#05020c','#140a2e','#22124a','#3a2470','#ffffff','#3af0ff','#ffd23a']},
  {pattern:4,prop:'crystal',sunX:146,moon:true,stars:true,sky:['#070b24','#12205a','#2a4a94','#5a8ad0','#b8e8ff'],sun:['#ffffff','#e8f4ff','#a8c8ff'],far:'#22306b',near:'#141b45',ground:['#d8fbff','#7fd0ee','#3a8ac2','#22508a','#122a55'],pc:['#100a2a','#5a2a8a','#c45ab8','#ff9ae0','#ffffff','#5af0e0','#1f6a8a']},
- {pattern:5,prop:'flower',sunX:60,sky:['#120a2a','#241a52','#4a3a94','#9a5ac8','#ff9ad0'],sun:['#fffbe8','#fff0a0','#ffc46b'],far:'#3a2a7a',near:'#1f1645',ground:['#c8ff7a','#6ad06a','#2a9a6a','#1a5a50','#0f2f35'],pc:['#1a0a20','#2a7a4a','#ff5aa0','#ffb0d0','#fff4b0','#ffd23a','#5ac87a']}];
+ {pattern:5,prop:'flower',sunX:60,sky:['#120a2a','#241a52','#4a3a94','#9a5ac8','#ff9ad0'],sun:['#fffbe8','#fff0a0','#ffc46b'],far:'#3a2a7a',near:'#1f1645',ground:['#c8ff7a','#6ad06a','#2a9a6a','#1a5a50','#0f2f35'],pc:['#1a0a20','#2a7a4a','#ff5aa0','#ffb0d0','#fff4b0','#ffd23a','#5ac87a']},
+ {pattern:1,prop:'lamp',sunX:150,moon:true,stars:true,skyline:true,floor:'hopscotch',sky:['#060716','#0e1030','#1c1a4a','#3a1f66','#7a2a8a'],sun:['#f4f0ff','#d0c8f0','#9a90c8'],far:'#16163a',near:'#0b0b22',ground:['#6a78a8','#2c3454','#1e2440','#151a30','#0a0e1c'],pc:['#06060f','#20243a','#3a4060','#6a7298','#fff3c4','#ff3fa4','#3af0ff']},
+ {pattern:4,prop:'speaker',sunX:96,disco:true,skyline:true,floor:'dance',sky:['#07020e','#14041f','#2a0838','#4a0a52','#8a1a6a'],sun:['#ffffff','#c8c8e0','#7a7a9a'],far:'#1a0626',near:'#0c0314',ground:['#ff3fa4','#2a0a3a','#1a0626','#120420','#080210'],pc:['#030205','#14101c','#241c30','#3a2e4a','#d8d0ff','#ff3fa4','#ffd23a']},
+ {pattern:3,prop:'pole',sunX:60,calm:true,rain:true,floor:'wet',sky:['#14161f','#262a38','#3c4252','#5c6272','#8a8e98'],sun:['#f0e6d8','#c8beb4','#9a928c'],far:'#2a2e3a',near:'#1a1d26',ground:['#7a8090','#3a3f4c','#2a2e38','#1e212a','#121419'],pc:['#0e0f14','#3a2c24','#5a4434','#7a6450','#d8dce4','#ff2440','#9aa0aa']}];
 PixelTrip.hero={
  m:{skin:'#ffd0a6',skinShade:'#e3957a',hair:'#3a2466',hairLight:'#5a3a8a',hairShade:'#2a1848',band:'#e8e8f4',cup:'#ff4f7a',cupLit:'#ffd0e0',eye:'#1b0f24',lips:'#e3957a',topLight:'#ffc35a',top:'#ff8a2e',topShade:'#c94a2e',pants:'#4256c4',pantsShade:'#283286',shoe:'#f4f4ff',shoeShade:'#a8a8c8',acc:'#3af0d0',accShade:'#1f9e94'},
  f:{skin:'#c98a5e',skinShade:'#9e6240',hair:'#ff4fa0',hairLight:'#ff9ad0',hairShade:'#b8287a',band:'#f4f4ff',cup:'#3af0d0',cupLit:'#c8fff8',eye:'#1b0f24',lips:'#ff5a7a',topLight:'#b8a0ff',top:'#7a5aff',topShade:'#4a32b0',pants:'#2a2050',pantsShade:'#1a1438',shoe:'#ffe14a',shoeShade:'#c8a020',acc:'#ffe14a',accShade:'#c8a020'}};
