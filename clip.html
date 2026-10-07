@@ -169,7 +169,7 @@ a.download{color:var(--acid)}
   </div>
   <div class="pane" data-pane="export" hidden>
    <h2>Exportar video</h2>
-   <p class="tip">El video se arma cuadro por cuadro en tu navegador, con la instrumental y la voz mezcladas. Funciona mejor en Chrome o Edge de escritorio.</p>
+   <p class="tip">El video se arma cuadro por cuadro en tu navegador, con todas las pistas mezcladas. Cuando termina, se descarga solo en tu carpeta de Descargas y lo podés ver acá mismo. Funciona mejor en Chrome o Edge de escritorio.</p>
    <div class="row">
     <label class="field"><span>Resolución</span><select id="res"><option value="1080">1920 × 1080</option><option value="720">1280 × 720</option></select></label>
     <label class="field"><span>Cuadros por segundo</span><select id="fps"><option value="30">30</option><option value="60">60</option></select></label>
@@ -182,6 +182,8 @@ a.download{color:var(--acid)}
    <button class="btn primary" id="exportBtn" type="button" disabled><svg class="i" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Exportar video</button>
    <div id="exportBox" hidden><div class="status" id="exportStatus"></div><div class="bar"><i id="exportBar"></i></div><button class="btn small danger" id="cancelExport" type="button" style="margin-top:10px">Cancelar</button></div>
    <div id="exportResult" class="status" hidden></div>
+   <div id="exportVideo" hidden style="display:flex;flex-direction:column;gap:10px"><video id="resultVideo" controls playsinline style="width:100%;border-radius:8px;background:#000"></video><a class="btn primary" id="resultDownload" download><svg class="i" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Descargar video</a></div>
+   <div id="readyVideo" hidden style="display:flex;flex-direction:column;gap:8px"><h2 style="margin-top:6px">Videoclip ya renderizado</h2><p class="tip">La canción completa en 1280 × 720, lista para ver o descargar.</p><a class="btn" id="readyLink" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg>Ver el videoclip</a><a class="btn" id="readyDownload" download><svg class="i" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Descargar el videoclip</a></div>
   </div>
  </aside>
 </main>
@@ -211,7 +213,8 @@ function defaultProject(){return sanitize(BENDITO_ERROR);}
 const scene=(t,name,world,view,transition,event,mate,thread,electric,speed)=>({id:uid(),t,name,world,view,transition,hero:'chico',event,mate,thread,electric,speed});
 // "Bendito error": a man runs lost and disconnected, looking for answers; the red thread of the bridge
 // leads him to her, and in the outro they meet ("vinimos a buscarnos sin saberlo").
-const BENDITO_ERROR={version:1,mix:{mix:1,drums:1,bass:1,other:1,vocals:1},intro:{on:true,title:'BENDITO ERROR',subtitle:'',bottom:'',duration:10},
+const SONGS={'bendito-error':{name:'Bendito error',files:[['drums','media/bendito-error/drums.mp3'],['bass','media/bendito-error/bass.mp3'],['other','media/bendito-error/other.mp3'],['vocals','media/bendito-error/vocals.mp3']],video:'media/bendito-error-720p.mp4'}};
+const BENDITO_ERROR={version:1,song:'bendito-error',mix:{mix:1,drums:1,bass:1,other:1,vocals:1},intro:{on:true,title:'BENDITO ERROR',subtitle:'',bottom:'',duration:10},
  style:{theme:'world',pulse:.15,ambient:1,curve:1,scan:.6,glow:1,warp:1,events:0,fadeIn:1.5,fadeOut:5},export:{res:'1080',fps:'30'},
  notes:`BENDITO ERROR — guion del videoclip
 Un hombre corre perdido, desconectado, buscando explicaciones. Mundos fríos y nocturnos; el azar lo mira (ojos). En el puente aparece el hilo rojo atado a su mano: lo une a alguien que todavía no conoce. En el solo la persigue a lo lejos; en el final se encuentran y corren juntos.
@@ -267,14 +270,14 @@ LETRA
 function sanitize(p){
  const d=p===BENDITO_ERROR?null:defaultProject();if(!p||typeof p!=='object')return d;
  const num=(v,lo,hi,def)=>Number.isFinite(+v)?Math.max(lo,Math.min(hi,+v)):def,pick=(v,list,def)=>list.some(o=>o[0]===v)?v:def,str=(v,max,def)=>typeof v==='string'?v.slice(0,max):def;
- const out={version:1,notes:str(p.notes,20000,''),mix:Object.fromEntries(ROLES.map(([r])=>[r,num(p.mix?.[r],0,1.5,1)])),
+ const out={version:1,song:SONGS[p.song]?p.song:'',notes:str(p.notes,20000,''),mix:Object.fromEntries(ROLES.map(([r])=>[r,num(p.mix?.[r],0,1.5,1)])),
   intro:{on:p.intro?.on!==false,title:str(p.intro?.title,16,'PULSO'),subtitle:str(p.intro?.subtitle,40,''),bottom:str(p.intro?.bottom,24,''),duration:num(p.intro?.duration,3,30,8)},
   style:{theme:p.style?.theme==='acid'?'acid':'world',pulse:num(p.style?.pulse,0,1,.15),ambient:num(p.style?.ambient,0,1.5,1),curve:num(p.style?.curve,0,2,1),scan:num(p.style?.scan,0,1,.6),glow:num(p.style?.glow,0,2,1),warp:num(p.style?.warp,0,2,1),events:num(p.style?.events,0,2,0),fadeIn:num(p.style?.fadeIn,0,6,1.5),fadeOut:num(p.style?.fadeOut,0,12,5)},
   export:{res:p.export?.res==='720'?'720':'1080',fps:p.export?.fps==='60'?'60':'30'},
   scenes:(Array.isArray(p.scenes)?p.scenes:[]).slice(0,200).map(s=>({id:typeof s.id==='string'?s.id.slice(0,20):uid(),t:num(s.t,0,3600,0),name:str(s.name,80,''),world:num(s.world,0,WORLDS.length-1,0)|0,view:pick(s.view,VIEWS,'side'),transition:pick(s.transition,TRANSITIONS,'portal'),hero:pick(s.hero,HEROES,'chica'),event:pick(s.event,EVENTS,'none'),mate:pick(s.mate,MATES,'none'),thread:!!s.thread,electric:num(s.electric,0,2,1),speed:num(s.speed,.5,2,1)}))};
  out.scenes.sort((a,b)=>a.t-b.t);if(!out.scenes.length)out.scenes=[{id:uid(),t:8,name:'Comienza el viaje',world:0,view:'side',transition:'portal',hero:'chico',event:'none',mate:'none',thread:false,electric:1,speed:1}];return out;
 }
-let project=defaultProject();try{const saved=localStorage.getItem(STORE);if(saved)project=sanitize(JSON.parse(saved));}catch{}
+let project=defaultProject();try{const saved=localStorage.getItem(STORE);if(saved){const p=sanitize(JSON.parse(saved));if(p.song)project=p;}}catch{}
 let saveTimer=0;function changed(rebuild=true){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{localStorage.setItem(STORE,JSON.stringify(project));}catch{}},300);if(rebuild)sim=null;drawTimeline();}
 
 // ───── Audio analysis: per-frame bands, spectrum, kicks, hi-hats and vocal presence ─────
@@ -429,7 +432,7 @@ function frame(){
  let t=now();if(playing&&t>=duration()-.01){pause();offset=duration();t=offset;}
  if(!sim||t<sim.t-SIM_DT*1.5)sim=new ClipSim(project,an);
  sim.advance(t);
- sim.draw();if(crt)crt.render(sim.trip.canvas,project.style,t,fadeAt(t));
+ sim.draw();if(crt)crt.render(sim.trip.canvas,project.style,t,playing?fadeAt(t):1);
  $('time').innerHTML=`<b>${fmt(t)}</b> / ${fmt(duration(),false)}`;drawTimeline(t);markScene(t);
 }
 
@@ -539,7 +542,7 @@ $('trackFiles').addEventListener('change',e=>{addFiles([...e.target.files]);e.ta
 // ───── Export: frame by frame with WebCodecs into an MP4; realtime recording as a fallback ─────
 async function pickVideo(w,h,fps){
  if(!('VideoEncoder' in window))return null;
- const level=w>1280?(fps>30?'2A':'28'):(fps>30?'20':'1F'),bitrate=(w>1280?14e6:8e6)*(fps>30?1.4:1);
+ const level=w>1280?(fps>30?'2A':'28'):(fps>30?'20':'1F'),bitrate=(w>1280?10e6:6e6)*(fps>30?1.4:1);
  for(const [codec,mux]of [['avc1.6400'+level,'avc'],['vp09.00.40.08','vp9'],['av01.0.08M.08','av1']]){const cfg={codec,width:w,height:h,bitrate,framerate:fps};try{if((await VideoEncoder.isConfigSupported(cfg)).supported)return {cfg,mux};}catch{}}
  return null;
 }
@@ -560,13 +563,11 @@ async function exportVideo(){
  pause();const fps=Number(project.export.fps),W=project.export.res==='720'?1280:1920,H=project.export.res==='720'?720:1080,[from,to]=exportRange();
  const v=await pickVideo(W,H,fps);if(!v)return exportRealtime(W,H,fps,from,to);
  const a=await pickAudio(tracks[0].buf.sampleRate);
- let target=null,writable=null;const name=(project.intro.title||'pulso').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'pulso';
- if(window.showSaveFilePicker){try{const h=await showSaveFilePicker({suggestedName:`${name}-videoclip.mp4`,types:[{description:'Video MP4',accept:{'video/mp4':['.mp4']}}]});writable=await h.createWritable();target=new Mp4Muxer.FileSystemWritableFileStreamTarget(writable);}catch(e){if(e.name==='AbortError')return;}}
- if(!target)target=new Mp4Muxer.ArrayBufferTarget();
- exporting={cancel:false};updatePlay();$('exportBox').hidden=false;$('exportResult').hidden=true;$('exportBtn').disabled=true;
+ const name=fileName(),sink=new BlobSink(),target=new Mp4Muxer.StreamTarget({onData:(d,pos)=>sink.write(d,pos),chunked:true,chunkSize:8*1048576});
+ exporting={cancel:false};updatePlay();$('exportBox').hidden=false;$('exportResult').hidden=true;$('exportVideo').hidden=true;$('exportBtn').disabled=true;
  let failure=null;
  try{
-  const muxer=new Mp4Muxer.Muxer({target,video:{codec:v.mux,width:W,height:H,frameRate:fps},audio:a?{codec:a.mux,numberOfChannels:2,sampleRate:a.cfg.sampleRate}:undefined,fastStart:writable?false:'in-memory',firstTimestampBehavior:'offset'});
+  const muxer=new Mp4Muxer.Muxer({target,video:{codec:v.mux,width:W,height:H,frameRate:fps},audio:a?{codec:a.mux,numberOfChannels:2,sampleRate:a.cfg.sampleRate}:undefined,fastStart:false,firstTimestampBehavior:'offset'});
   if(a){
    setExport('Mezclando el audio…',0);const mix=await renderMix(from,to,a.cfg.sampleRate),L=mix.getChannelData(0),R=mix.getChannelData(1),n=mix.length,sr=a.cfg.sampleRate;
    const enc=new AudioEncoder({output:(c,m)=>muxer.addAudioChunk(c,m),error:e=>failure=e});enc.configure(a.cfg);
@@ -585,10 +586,9 @@ async function exportVideo(){
   }
   await enc.flush();enc.close();
   if(failure)throw failure;
-  if(exporting.cancel){if(writable)await writable.abort?.();setExport('Exportación cancelada.',0);return;}
+  if(exporting.cancel){showResult('Exportación cancelada.');return;}
   muxer.finalize();
-  if(writable){await writable.close();showResult(`Listo: el video se guardó (${v.mux==='avc'?'H.264':v.mux.toUpperCase()}${a?' + '+(a.mux==='aac'?'AAC':'Opus'):', sin audio'}).`);}
-  else{const url=URL.createObjectURL(new Blob([target.buffer],{type:'video/mp4'}));showResult(`Listo (${(target.buffer.byteLength/1048576).toFixed(1)} MB). <a class="download" href="${url}" download="${name}-videoclip.mp4">Descargar el video</a>`);}
+  deliver(sink.blob,'video/mp4',`${name}.mp4`,`${v.mux==='avc'?'H.264':v.mux.toUpperCase()}${a?' + '+(a.mux==='aac'?'AAC':'Opus'):', sin audio'}`);
  }catch(e){console.error(e);showResult('No se pudo exportar: '+(e.message||e)+'. Probá con 720p o con Chrome de escritorio.');}
  finally{exporting=null;$('exportBox').hidden=true;$('exportBtn').disabled=false;updatePlay();}
 }
@@ -598,14 +598,24 @@ async function exportRealtime(W,H,fps,from,to){
  const dest=ctx.createMediaStreamDestination(),stream=new MediaStream([...canvas.captureStream(fps).getVideoTracks(),...dest.stream.getAudioTracks()]);
  const type=['video/mp4;codecs=avc1,mp4a','video/webm;codecs=vp9,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||'';const rec=new MediaRecorder(stream,{mimeType:type,videoBitsPerSecond:W>1280?14e6:8e6});const parts=[];rec.ondataavailable=e=>e.data.size&&parts.push(e.data);
  const srcs=[];for(const t of tracks){const b=ctx.createBufferSource(),g=ctx.createGain();b.buffer=t.buf;g.gain.value=project.mix[t.role]??1;b.connect(g);g.connect(dest);srcs.push(b);}
- exporting={cancel:false};updatePlay();$('exportBox').hidden=false;$('exportResult').hidden=true;$('exportBtn').disabled=true;
+ exporting={cancel:false};updatePlay();$('exportBox').hidden=false;$('exportResult').hidden=true;$('exportVideo').hidden=true;$('exportBtn').disabled=true;
  rec.start(500);const start=ctx.currentTime+.1;for(const b of srcs)b.start(start,from,to-from);
  await new Promise(done=>{const tick=()=>{const t=from+Math.max(0,ctx.currentTime-start);if(exporting.cancel||t>=to){done();return;}s.advance(t);s.draw();out.render(s.trip.canvas,project.style,t,fadeAt(t));setExport(`Grabando en tiempo real · ${fmt(t-from,false)} de ${fmt(to-from,false)}`,(t-from)/(to-from));requestAnimationFrame(tick);};tick();});
  for(const b of srcs){try{b.stop();}catch{}}await new Promise(r=>{rec.onstop=r;rec.stop();});
  const cancelled=exporting.cancel;exporting=null;$('exportBox').hidden=true;$('exportBtn').disabled=false;updatePlay();if(cancelled){showResult('Exportación cancelada.');return;}
- const ext=type.includes('mp4')?'mp4':'webm',url=URL.createObjectURL(new Blob(parts,{type:type.split(';')[0]||'video/webm'}));showResult(`Listo. <a class="download" href="${url}" download="pulso-videoclip.${ext}">Descargar el video (.${ext})</a>`);
+ const ext=type.includes('mp4')?'mp4':'webm';deliver(new Blob(parts,{type:type.split(';')[0]||'video/webm'}),type.split(';')[0]||'video/webm',`${fileName()}.${ext}`,'grabación en tiempo real');
 }
 function showResult(html){const r=$('exportResult');r.innerHTML=html;r.hidden=false;}
+function fileName(){const [a,b]=exportRange(),full=a<=0&&b>=duration()-.5,base=(project.intro.title||'pulso').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'pulso';return `${base}-videoclip${full?'':`-${Math.round(a)}s-${Math.round(b)}s`}-${project.export.res}p`;}
+// The muxer streams bytes with positions; a Blob keeps them off the JS heap and absorbs the final header patch.
+class BlobSink{constructor(){this.blob=new Blob([]);}write(data,pos){const d=new Uint8Array(data),end=this.blob.size;if(pos===end)this.blob=new Blob([this.blob,d]);else if(pos>end)this.blob=new Blob([this.blob,new Uint8Array(pos-end),d]);else this.blob=new Blob([this.blob.slice(0,pos),d,this.blob.slice(Math.min(end,pos+d.length))]);}}
+let lastUrl=null;
+function deliver(blob,type,name,codec){
+ if(lastUrl)URL.revokeObjectURL(lastUrl);const url=lastUrl=URL.createObjectURL(new Blob([blob],{type}));
+ const v=$('resultVideo');v.src=url;$('resultDownload').href=url;$('resultDownload').download=name;$('exportVideo').hidden=false;
+ showResult(`Listo: «${name}» (${(blob.size/1048576).toFixed(1)} MB, ${codec}). Se descargó en tu carpeta de Descargas; si no lo ves, usá el botón.`);
+ const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();
+}
 
 // ───── Project files ─────
 $('saveProject').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(project,null,1)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='pulso-videoclip.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);});
@@ -617,11 +627,19 @@ function showTab(name){document.querySelectorAll('.tab').forEach(t=>t.setAttribu
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>showTab(t.dataset.tab)));
 $('playBtn').addEventListener('click',()=>playing?pause():play());$('bigPlay').addEventListener('click',play);
 $('addScene').addEventListener('click',addScene);
-$('loadStory').addEventListener('click',()=>{if(!confirm('¿Reemplazar las escenas actuales por la historia de «Bendito error»?'))return;project=sanitize(BENDITO_ERROR);applyMix();changed();bindAll();notify('Historia cargada: 26 escenas siguiendo la canción.');});$('exportBtn').addEventListener('click',exportVideo);$('cancelExport').addEventListener('click',()=>{if(exporting)exporting.cancel=true;});
+$('loadStory').addEventListener('click',()=>{if(!confirm('¿Reemplazar las escenas actuales por la historia de «Bendito error»?'))return;project=sanitize(BENDITO_ERROR);applyMix();changed();bindAll();loadSong();notify('Historia cargada: 26 escenas siguiendo la canción.');});$('exportBtn').addEventListener('click',exportVideo);$('cancelExport').addEventListener('click',()=>{if(exporting)exporting.cancel=true;});
 document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)||e.ctrlKey||e.metaKey||e.altKey)return;if(e.code==='Space'){e.preventDefault();playing?pause():play();}else if(e.key.toLowerCase()==='s')addScene();else if(e.key==='ArrowRight')seek(now()+1);else if(e.key==='ArrowLeft')seek(now()-1);});
 window.addEventListener('resize',()=>drawTimeline());
 try{crt=new CRT($('view'));}catch(e){notify('Tu navegador no tiene WebGL: la vista previa no está disponible.');}
-bindAll();updatePlay();requestAnimationFrame(frame);
+async function loadSong(){
+ const song=SONGS[project.song];if(!song||tracks.length)return;
+ if(song.video)fetch(song.video,{method:'HEAD'}).then(r=>{if(!r.ok)return;$('readyVideo').hidden=false;$('readyLink').href=song.video;$('readyDownload').href=song.video;$('readyDownload').download='bendito-error-videoclip-720p.mp4';}).catch(()=>{});
+ $('analysisBox').hidden=false;$('analysisStatus').textContent=`Cargando «${song.name}»…`;
+ try{const ctx=ensureCtx();let done=0;const bufs=await Promise.all(song.files.map(async([role,url])=>{const r=await fetch(url);if(!r.ok)throw new Error(url);const buf=await ctx.decodeAudioData(await r.arrayBuffer());$('analysisBar').style.width=Math.round(++done/song.files.length*100)+'%';return {id:uid(),name:url.split('/').pop(),role,buf,gain:null};}));
+  if(tracks.length)return;tracks.push(...bufs);renderTracks();await reanalyse();}
+ catch{$('analysisStatus').textContent='No se pudieron cargar las pistas de la canción. Agregalas desde tu compu.';}
+}
+bindAll();updatePlay();requestAnimationFrame(frame);loadSong();
 window.__clip={get project(){return project;},get analysis(){return an;},get tracks(){return tracks;},seek,play,pause,addFiles,exportVideo};
 </script>
 </body>
