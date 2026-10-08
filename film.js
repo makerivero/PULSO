@@ -101,7 +101,7 @@ class Film {
   this.quad(...F(-.05,.32),sh[0]+s*h*.004,sh[1]-h*.01,q*.36,q*.42,c('skinShade'));
   this.ellipse(hx-s*q*.04,hy,q*.46,q*.5,(x,y,dx)=>s*dx<-.45&&this.d(x,y)<.6?c('skinShade'):c('skin'));
   this.poly([F(.28,-.32),F(.43,-.06),F(.55,.1),F(.43,.16),F(.45,.27),F(.36,.43),F(.12,.52),F(-.1,.42)],c('skin'));
-  const [ex,ey]=F(.3,-.03);this.px(ex,ey,c('eye'));if(h>70){this.px(ex-s,ey,c('eye'));this.px(ex,ey-1,c(P.beanie?'skinDark':'eye'));const [nx,ny]=F(.44,.2);this.px(nx,ny,c('skinDark'));const [mx,my]=F(.36,.3);this.px(mx,my,P.lips?c('lips'):c('skinDark'));}
+  const [ex,ey]=F(.3,-.03);this.px(ex,ey,c('eye'));if(h>70){this.px(ex-s,ey,c('eye'));this.px(ex,ey-1,c(P.beanie?'skinDark':'eye'));const [nx,ny]=F(.44,.2);this.px(nx,ny,c('skinDark'));const [mx,my]=F(.36,.3);this.px(mx,my,P.lips?c('lips'):c('skinDark'));if(P.stache){const [sx,sy]=F(.4,.25);this.px(sx,sy,c('stache'));if(h>110)this.px(sx-s,sy,c('stache'));}}
   if(P.beanie){this.poly([F(-.18,.22),F(-.46,.16),F(-.5,-.15),F(-.36,-.5),F(-.05,-.64),F(.26,-.56),F(.44,-.34),F(.47,-.14)],c('hair'));
    this.poly([F(-.52,.1),F(-.55,-.2),F(-.4,-.52),F(-.08,-.68),F(.24,-.62),F(.44,-.42),F(.5,-.22),F(.48,-.12)],(x,y)=>{const u=s*(x-hx)/q,top=hy+(-.24+(.48-u)*.3)*q;if(y>top){const rib=h>60&&(Math.round(x)&1);return rib?c('beanieDark'):c('beanieShade');}return u>.12?(h>60&&this.d(x,y)<.3?c('beanieLight'):c('beanie')):u<-.3&&this.d(x,y)<.6?c('beanieShade'):c('beanie');});}
   else{this.poly([F(-.6,.5),F(-.6,.1),F(-.5,-.4),F(-.1,-.64),F(.3,-.52),F(.5,-.25),F(.36,-.26),F(.1,-.22),F(-.08,.0),F(-.16,.3),F(-.3,.55)],(x,y)=>this.d(x,y)<.25?c('hairLight'):c('hair'));}
@@ -158,6 +158,7 @@ class Film {
   const [bx,by]=U(her?.74:.73,her?.345:.355);this.rect(Math.min(bx,bx+dr*12),by-(o.look<0?1:0),12,her?1:2,this.c(her?'#4a2a14':'#5a3420'));
   this.rect(...U(.865,.595).map((v,i)=>i?v:v-(dr<0?2:0)),2,1,this.c('#9a5a48'));
   const [mx,my]=U(.82,.69);
+  if(P.stache){for(let i=0;i<=10;i++){const u=.795+i*.0075,v=.652+Math.abs(i-6)*.0016,[a,b]=U(u,v),th=Math.max(1,Math.round(S/90));for(let k=0;k<th;k++)if(i<2||i>9?this.d(Math.round(a),Math.round(b+k))<.45:this.d(Math.round(a),Math.round(b+k))<.85)this.px(a,b+k,c('stache'));}}
   if(o.open){this.rect(mx-(dr<0?4:0),my-1,5,3,this.c('#3a1018'));}
   else if(her){this.rect(mx-(dr<0?5:0),my,6,2,c('lips'));this.px(mx+dr*(o.smile?6:5),my-(o.smile?1:0),c('lips'));}
   else{this.rect(mx-(dr<0?4:0),my,5,1,this.c('#b06a5a'));if(o.smile){this.px(mx+dr*5,my-1,this.c('#b06a5a'));this.px(mx-dr*1,my+1,this.c('#d08a7a'));}}
@@ -193,6 +194,6 @@ class Film {
 Film.P=.49985;Film.BEAT0=.082;Film.BAR0=2.081;
 Film.BAYER=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(v=>(v+.5)/16);
 Film.CAST={
- milton:{beanie:'#ffd23a',beanieLight:'#fff08a',beanieShade:'#d9a81e',beanieDark:'#a67810',jacket:'#22d6c4',jacketShade:'#139c99',jacketDark:'#0d6f74',yoke:'#ff2f9a',stripe:'#ffe14a',sleeve:'#ff2f9a',sleeveShade:'#b81c72',cuff:'#22d6c4',zip:'#d8dce8',jeans:'#34508f',jeansShade:'#25396a',shoe:'#f2f2f6',shoeShade:'#b8b8c8',sole:'#2a2a36',skin:'#f6cfb0',skinShade:'#dca587',skinDark:'#b9806a',eye:'#1a1020',hair:'#4a3020',phones:'#26263a',phonesLight:'#6a6a84'},
+ milton:{beanie:'#ffd23a',beanieLight:'#fff08a',beanieShade:'#d9a81e',beanieDark:'#a67810',jacket:'#22d6c4',jacketShade:'#139c99',jacketDark:'#0d6f74',yoke:'#ff2f9a',stripe:'#ffe14a',sleeve:'#ff2f9a',sleeveShade:'#b81c72',cuff:'#22d6c4',zip:'#d8dce8',jeans:'#34508f',jeansShade:'#25396a',shoe:'#f2f2f6',shoeShade:'#b8b8c8',sole:'#2a2a36',skin:'#f6cfb0',skinShade:'#dca587',skinDark:'#b9806a',eye:'#1a1020',hair:'#4a3020',stache:'#8a5a3c',phones:'#26263a',phonesLight:'#6a6a84'},
  her:{hairLight:'#8a5636',jacket:'#e8384f',jacketShade:'#b02238',jacketDark:'#7a1428',yoke:'#e8384f',stripe:'#ffd0d8',sleeve:'#e8384f',sleeveShade:'#a01c34',cuff:'#ffd0d8',zip:'#d8dce8',jeans:'#2a2440',jeansShade:'#1c1830',shoe:'#f2f2f6',shoeShade:'#b8b8c8',sole:'#2a2a36',skin:'#f8d6bc',skinShade:'#e0aa8c',skinDark:'#c08470',eye:'#1a1020',hair:'#6b3f22',lips:'#d0506a'}};
 window.Film=Film;
