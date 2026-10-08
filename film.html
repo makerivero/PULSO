@@ -49,7 +49,7 @@ video{width:100%;border-radius:8px;background:#000}
   <div id="result" hidden style="width:100%;display:flex;flex-direction:column;gap:10px"><video id="resultVideo" controls playsinline></video><a class="btn primary" id="resultLink" download>Descargar video</a></div>
  </div>
 </div>
-<script src="games.js"></script><script src="crt.js"></script><script src="film.js"></script><script src="bendito.js"></script><script src="vendor/mp4-muxer-5.2.2.js"></script>
+<script src="games.js"></script><script src="crt.js"></script><script src="film.js"></script><script src="bendito.js"></script><script src="scenes_chorus.js"></script><script src="scenes_disco.js"></script><script src="scenes_montage.js"></script><script src="scenes_finale.js"></script><script src="vendor/mp4-muxer-5.2.2.js"></script>
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
@@ -58,7 +58,7 @@ const END=SHOTS[SHOTS.length-1].t1,FADE_IN=1.2;
 const fmt=t=>{t=Math.max(0,t);const m=Math.floor(t/60),s=Math.floor(t-m*60);return m+':'+String(s).padStart(2,'0');};
 const film=new Film();let crt=null;try{crt=new CRT($('view'));}catch{}
 let actx=null,buf=null,src=null,playing=false,startAt=0,offset=0,dur=END;
-const fade=t=>Math.min(1,t/FADE_IN,(END-t)/.6);
+const fade=t=>Math.min(1,t/FADE_IN,(END-t)/3);
 async function loadAudio(){
  actx=new (window.AudioContext||window.webkitAudioContext)();
  for(const list of [['media/bendito-error/song.mp3'],['media/bendito-error/drums.mp3','media/bendito-error/bass.mp3','media/bendito-error/other.mp3','media/bendito-error/vocals.mp3']]){

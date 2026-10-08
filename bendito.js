@@ -1,15 +1,106 @@
 'use strict';
 // Bendito error — shot list and scenes. Times are bar lines of the song (120 BPM, bars of 4 beats).
 const B=i=>Film.bar(i);
+const Bb=(i,beats)=>Film.bar(i)+beats*Film.P;
+const FILM_END=374.1;
+// Cuts follow the lyric timing measured from the full mix: a line's shot starts on the bar (or the beat) where it is sung.
 const SHOTS=[
+ // Intro
  {t0:0,t1:B(2),fn:'shotTitle'},
  {t0:B(2),t1:B(4),fn:'shotCity'},
  {t0:B(4),t1:B(5),fn:'shotPuddle'},
  {t0:B(5),t1:B(6),fn:'shotZipper'},
  {t0:B(6),t1:B(8),fn:'shotCloseUp'},
- {t0:B(8),t1:B(12),fn:'shotBridge'},
- {t0:B(12),t1:B(14),fn:'shotPlanks'},
- {t0:B(14),t1:B(16),fn:'shotLowAngle'}];
+ // Verse 1 — 17.8 «Un puente no se sostiene de hierro» · 21.5 «se sostiene de las ganas de cruzarlo»
+ {t0:B(8),t1:B(10),fn:'shotBridge'},
+ {t0:B(10),t1:B(11),fn:'shotPlanks'},
+ {t0:B(11),t1:Bb(12,-1),fn:'shotLowAngle'},
+ // 25.5 «Rayuela de neón en el asfalto frío» · 29.3 «donde el azar es un animal que no sabe de olvido»
+ {t0:Bb(12,-1),t1:Bb(14,-1),fn:'shotHopscotch'},
+ {t0:Bb(14,-1),t1:B(16),fn:'shotDiceRoll'},
+ {t0:B(16),t1:B(17),fn:'shotDiceEyes'},
+ // 36.0 «Caminamos sin buscarnos, pero sabiendo / que el encuentro es un dibujo que el viento va escribiendo»
+ {t0:B(17),t1:B(19),fn:'shotSplitWalk'},
+ {t0:B(19),t1:B(21),fn:'shotWindMap'},
+ // Instrumental: her, and him disconnected
+ {t0:B(21),t1:B(22),fn:'shotHerIntro'},
+ {t0:B(22),t1:B(23),fn:'shotPhone'},
+ {t0:B(23),t1:B(24),fn:'shotLost'},
+ // Pre-chorus — 50.0 «No me des la mano, dame tu pulso» · 54 «el tiempo es un reloj de arena en falso curso»
+ {t0:B(24),t1:B(26),fn:'shotHands'},
+ {t0:B(26),t1:B(28),fn:'shotHourglass'},
+ // ~58 «Saltamos los cuadros, perdemos la cuenta» · ~64 «la noche es un pasaje que el ritmo inventa»
+ {t0:B(28),t1:B(30),fn:'shotPanels'},
+ {t0:B(30),t1:B(32),fn:'shotCountLost'},
+ {t0:B(32),t1:B(34),fn:'shotPassage'},
+ {t0:B(34),t1:B(36),fn:'shotPassageSide'},
+ // Build into the chorus: one detail per bar
+ {t0:B(36),t1:B(37),fn:'shotEyeCU'},
+ {t0:B(37),t1:B(38),fn:'shotFeetRun'},
+ {t0:B(38),t1:B(39),fn:'shotPhonesCU'},
+ {t0:B(39),t1:B(40),fn:'shotRunFast'},
+ // Chorus — 82 «Baila el azar, canta el vacío» · 87 «en este laberinto que ya no es mío» · 94 «Siente el motor, la sangre, el gancho» · 104.5 «el universo cabe en este rancho»
+ {t0:B(40),t1:B(42),fn:'shotDiceDance'},
+ {t0:B(42),t1:B(46),fn:'shotMaze'},
+ {t0:B(46),t1:B(48),fn:'shotHeart'},
+ {t0:B(48),t1:B(51),fn:'shotStreetDance'},
+ {t0:B(51),t1:B(54),fn:'shotRancho'},
+ {t0:B(54),t1:B(56),fn:'shotLedWall'},
+ // Break (no bass): disconnected, the city goes dark, the discotheque
+ {t0:B(56),t1:B(58),fn:'shotNoSignal'},
+ {t0:B(58),t1:B(60),fn:'shotLightsOut'},
+ {t0:B(60),t1:Bb(63,1),fn:'shotDiscoDoor'},
+ // Verse 2 — 128.8 «Instrucciones para llorar en la discoteca» · 132.9 «se rompe el cristal, la luz se queda seca»
+ {t0:Bb(63,1),t1:Bb(65,2),fn:'shotDiscoFloor'},
+ {t0:Bb(65,2),t1:Bb(67,1),fn:'shotGlass'},
+ // 137.0 «Somos figuras de jazz en un mundo de ruido» · 141.7 «un saxofón de humo, un latido perdido»
+ {t0:Bb(67,1),t1:Bb(69,3),fn:'shotJazz'},
+ {t0:Bb(69,3),t1:B(72),fn:'shotSax'},
+ // 146.1 «Corres por la inercia de no ser estático, el sudor es el lenguaje de lo pragmático»
+ {t0:B(72),t1:B(76),fn:'shotRunOut'},
+ {t0:B(76),t1:B(78),fn:'shotSweat'},
+ {t0:B(78),t1:B(80),fn:'shotRunLow'},
+ // Bass only, then the full stop at 2:56
+ {t0:B(80),t1:B(82),fn:'shotHerWalk'},
+ {t0:B(82),t1:B(84),fn:'shotAlley'},
+ {t0:B(84),t1:B(87),fn:'shotSameMoon'},
+ {t0:B(87),t1:B(88),fn:'shotFreeze'},
+ // Instrumental groove — MTV montage of parallel lives
+ {t0:B(88),t1:B(90),fn:'shotRoofDance'},
+ {t0:B(90),t1:B(92),fn:'shotWindowDance'},
+ {t0:B(92),t1:B(94),fn:'shotSubway'},
+ {t0:B(94),t1:B(96),fn:'shotScreens'},
+ {t0:B(96),t1:B(100),fn:'shotArcade'},
+ {t0:B(100),t1:B(104),fn:'shotSigns'},
+ {t0:B(104),t1:B(108),fn:'shotHerRoof'},
+ {t0:B(108),t1:B(112),fn:'shotRoofCables'},
+ // Bridge — 226 «¿Ves ese hilo rojo entre los cables?» · 230.3 «No somos libres, somos responsables» · 235.6 «de la belleza de este error…» · 239.4 «de este bendito error…»
+ {t0:B(112),t1:B(114),fn:'shotCablesSky'},
+ {t0:B(114),t1:Bb(117,-1),fn:'shotPinky'},
+ {t0:Bb(117,-1),t1:Bb(119,-1),fn:'shotThreadTrack'},
+ {t0:Bb(119,-1),t1:B(120),fn:'shotSmile'},
+ // Final chorus
+ {t0:B(120),t1:B(122),fn:'shotRoofRun'},
+ {t0:B(122),t1:B(124),fn:'shotHerRun'},
+ {t0:B(124),t1:B(126),fn:'shotMazeThread'},
+ {t0:B(126),t1:B(128),fn:'shotRanchoBoth'},
+ // Guitar & synth solo
+ {t0:B(128),t1:B(132),fn:'shotKeytarWide'},
+ {t0:B(132),t1:B(134),fn:'shotKeys'},
+ {t0:B(134),t1:B(136),fn:'shotHerBridgeRun'},
+ {t0:B(136),t1:B(140),fn:'shotKeytarLasers'},
+ {t0:B(140),t1:B(142),fn:'shotBeanieNod'},
+ {t0:B(142),t1:B(144),fn:'shotLeap'},
+ {t0:B(144),t1:B(148),fn:'shotConverge'},
+ {t0:B(148),t1:B(152),fn:'shotBridgeApproach'},
+ // Outro voice — 305.8 «Vinimos a buscarnos sin saberlo…» · 313.8 «Vinimos a buscarnos…»
+ {t0:B(152),t1:B(156),fn:'shotMeet'},
+ {t0:B(156),t1:B(160),fn:'shotFaces'},
+ // Outro: walking together, the camera rises to the sky, the title returns
+ {t0:B(160),t1:B(164),fn:'shotTogether'},
+ {t0:B(164),t1:B(168),fn:'shotTogetherLow'},
+ {t0:B(168),t1:B(176),fn:'shotSkyTilt'},
+ {t0:B(176),t1:FILM_END,fn:'shotEndTitle'}];
 const F=Film.prototype;
 const NIGHT=['#05050f','#090a1c','#11122c','#1b1840','#2a2052','#3a2a62'];
 const walkAt=t=>((t-Film.BEAT0)/Film.P)/2+.25;
@@ -123,30 +214,8 @@ F.shotCloseUp=function(lt,t){
  this.vgrad(0,0,W,H,['#05050f','#0b0a20','#141230','#1c1638']);
  for(const [bx,by,r,col,sp]of [[40,40,34,'#3af0ff',.4],[90,120,22,'#ffb04a',.3],[255,36,40,'#ff3fa4',.5],[300,130,30,'#3af0ff',.2],[20,150,26,'#ff3fa4',.3],[230,150,18,'#ffe14a',.2]])this.glow(bx-lt*sp*6,by,r,col,.65);
  this.rain(t,.5,lt*8);
- const S=120,ox=94-lt*3,oy=24+(bt.ph<.12?1:0),U=(u,v)=>[ox+u*S,oy+v*S],pts=a=>a.map(([u,v])=>U(u,v));
- // Neck and jacket collar.
- this.poly(pts([[.50,.78],[.72,.86],[.78,1.4],[.40,1.4]]),(x,y)=>x<ox+.58*S?c('skinShade'):c('skin'));
- this.poly(pts([[.18,1.02],[.40,.93],[.62,.98],[.86,.92],[.98,1.0],[1.1,1.5],[.1,1.5]]),(x,y)=>{const u=(x-ox)/S,v=(y-oy)/S;if(v>1.18)return c('yoke');if(Math.abs(v-1.14)<.012)return c('stripe');return u>.62?c('jacket'):c('jacketShade');});
- this.line(...U(.86,.93),...U(.92,1.4),this.c('#d8dce8'),2);
- // Head.
- const face=[[.45,.00],[.62,.02],[.74,.08],[.80,.18],[.82,.30],[.83,.38],[.86,.44],[.90,.53],[.93,.58],[.89,.61],[.86,.63],[.87,.66],[.85,.68],[.865,.71],[.83,.74],[.81,.79],[.80,.85],[.72,.90],[.58,.88],[.50,.80],[.40,.74],[.30,.64],[.22,.46],[.24,.25],[.32,.08]];
- this.poly(pts(face),(x,y)=>{const u=(x-ox)/S,v=(y-oy)/S;if(u<.52)return this.d(x,y)<.5?c('skinShade'):c('skinDark');if(u<.6)return this.d(x,y)<.5?c('skin'):c('skinShade');return c('skin');});
- // Rim light from the pink neon in front, cyan from behind.
- for(let i=0;i<face.length;i++){const [a,b]=U(...face[i]),[a2,b2]=U(...face[(i+1)%face.length]);const front=face[i][0]>.78;if(front)this.line(a,b,a2,b2,this.c(k>.5?'#ffd0ea':'#ff8fd0'));else if(face[i][0]<.3)this.line(a,b,a2,b2,this.c('#5fe8f0'));}
- // Eye, brow, nostril, lips.
- const blink=lt>2.55&&lt<2.68;const [ex,ey]=U(.775,.405);
- if(blink)this.rect(ex-3,ey,7,1,this.c('#7a4a3a'));else{this.rect(ex-3,ey-1,7,3,this.c('#f4ecec'));this.rect(ex+1,ey-1,3,3,this.c('#3a2418'));this.px(ex+2,ey-1,this.c('#ffffff'));this.rect(ex-4,ey-2,8,1,this.c('#6a3a2a'));}
- this.rect(...U(.73,.355),12,2,this.c('#5a3420'));this.rect(...U(.865,.595),2,1,this.c('#9a5a48'));this.rect(...U(.82,.69),5,1,this.c('#b06a5a'));
- // Hair at the nape and sideburn.
- this.poly(pts([[.22,.46],[.34,.50],[.36,.66],[.27,.62]]),(x,y)=>this.d(x,y)<.3?this.c('#6a4430'):c('hair'));
- // Beanie: knit body, folded brim with ribs; no pompom.
- const beanie=[[.18,.54],[.15,.32],[.22,.12],[.38,-.03],[.58,-.05],[.74,.02],[.84,.14],[.885,.27],[.875,.355],[.60,.38],[.38,.45]];
- this.poly(pts(beanie),(x,y)=>{const u=(x-ox)/S,v=(y-oy)/S,brimTop=.255+(.86-u)*.17;if(v>brimTop){const rib=(Math.floor(x)+Math.floor(y*.15))%3;return rib===0?c('beanieDark'):u>.7?c('beanie'):c('beanieShade');}
-  const knit=((Math.floor(y/3)&1)?(x&3)===0:(x&3)===2)&&this.d(x,y)<.6;if(knit)return c('beanieShade');return u>.66?(this.d(x,y)<.35?c('beanieLight'):c('beanie')):u<.3?c('beanieShade'):c('beanie');});
- for(let i=0;i<beanie.length;i++){if(beanie[i][0]<.6)continue;const [a,b]=U(...beanie[i]),[a2,b2]=U(...beanie[(i+1)%beanie.length]);if(beanie[(i+1)%beanie.length][0]>.6)this.line(a,b,a2,b2,this.c('#fff6c0'));}
- // Headphones: band over the beanie, cup over the ear.
- for(let s=0;s<=1;s+=.02){const u=.43+Math.sin(s*1.4)*.1,v=.36-s*.42;const [a,b]=U(u,v);this.rect(a-1,b-1,4,4,c('phones'));if(s>.15)this.px(a+1,b-1,c('phonesLight'));}
- const [cx,cy]=U(.42,.50);this.ellipse(cx,cy,13,16,(x,y,dx,dy)=>dx*dx+dy*dy>.75?this.c('#14141f'):dx>.2&&dy<-.1?c('phonesLight'):c('phones'));this.ellipse(cx+2,cy-1,5,6,this.c('#3a3a52'));
+ const S=120,ox=94-lt*3,oy=24+(bt.ph<.12?1:0),U=(u,v)=>[ox+u*S,oy+v*S];
+ this.portrait({x:ox,y:oy,S,who:'milton',dir:1,blink:lt>2.55&&lt<2.68,kick:k});
  // Breath in the cold, on the second beat of each bar.
  if(bt.n%4===1){const p=bt.ph;const [mx,my]=U(.9,.69);for(let i=0;i<14;i++){const x=mx+p*30+this.rand(i)*12,y=my-p*8+(this.rand(i+5)-.5)*10;if(this.d(Math.round(x),Math.round(y))<(1-p)*.7)this.px(x,y,this.c('#c8d0f0'));}}
  this.rain(t,.25,lt*20);
@@ -213,5 +282,330 @@ F.shotLowAngle=function(lt,t){
  // Deck edge right at the lens.
  this.rect(0,H-7,W,7,(x,y)=>this.c(y>H-3?'#120c14':this.d(x,y)<.25?'#4a3a3a':'#2a2028'));this.glow(X,H-4,40,'#ffb04a',.25*k,.3);
  for(let i=0;i<70;i++){const a=this.rand(i)*Math.PI*2,ph=(t*1.1+this.rand(i+7))%1,r0=ph*190,len=3+ph*14,cx=vx,cy=H*.3;for(let q=0;q<len;q++){const x=cx+Math.cos(a)*(r0+q),y=cy+Math.sin(a)*(r0+q)*.9;if(this.d(Math.round(x),Math.round(y))<.4+ph*.4)this.px(x,y,this.c(ph>.6?'#e0e4ff':'#8a8ec0'));}}
+};
+
+// ── Overhead: a neon hopscotch painted on cold wet asphalt; he hops one square per beat.
+F._hopLayout=function(){
+ // Squares along x: [x0, y0, w, h, label]; doubles stack vertically.
+ const q=46,cy=92,L=[];let x=60;
+ const single=n=>{L.push([x,cy-q/2,q,q,String(n)]);x+=q;},double=(a,b)=>{L.push([x,cy-q,q,q,String(a)]);L.push([x,cy,q,q,String(b)]);x+=q;};
+ single(1);single(2);single(3);double(4,5);single(6);double(7,8);L.push([x,cy-q,q*1.3,q*2,'CIELO']);return L;
+};
+F._asphalt=function(ox,oy,t,base='#15142a'){
+ const W=this.W,H=this.H;
+ this.rect(0,0,W,H,(x,y)=>{const wx=x+ox,wy=y+oy,n=this.rand((wx*73856093)^(wy*19349663));return this.c(n<.05?'#2a2944':n<.12?'#1c1b34':base);});
+};
+F._puddleRings=function(t,ox,amt){
+ for(let i=0;i<amt;i++){const ph=(t*1.3+this.rand(i*11))%1,cx=((this.rand(i*7)*420-ox*.0)%420+420)%420-50,cy=this.rand(i*5)*this.H,r=2+ph*9;
+  if(this.d(Math.round(cx),Math.round(cy))<1-ph)this.ellipse(cx,cy,r,r*.7,(x,y,dx,dy)=>Math.abs(dx*dx+dy*dy-1)<.25&&this.d(x,y)<(1-ph)*.8?this.c('#5a5f90'):0);}
+};
+F.shotHopscotch=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),L=this._hopLayout();
+ // Landing spots per beat: 1,2,3,(4|5),6,(7|8),CIELO, then he turns.
+ const sp=n=>{const sq=L.find(q=>q[4]===n);return [sq[0]+sq[2]/2,92];},spots=[sp('1'),sp('2'),sp('3'),[sp('4')[0],92],sp('6'),[sp('7')[0],92],[sp('CIELO')[0]+10,92],[sp('CIELO')[0]+10,92]];
+ const b0=Math.round((t-lt-Film.BEAT0)/Film.P),k=Math.max(0,bt.b-b0),i=Math.min(spots.length-2,Math.floor(k)),f=Math.min(1,k-i);
+ const air=Film.ease(Math.min(1,f/.55)),A=spots[i],Bp=spots[Math.min(spots.length-1,i+1)],hx=A[0]+(Bp[0]-A[0])*air,hy=A[1],lift=Math.sin(Math.min(1,f/.55)*Math.PI)*(i>=6?0:1);
+ const camX=Math.max(0,Math.min(250,hx-120));
+ this._asphalt(camX,0,t);
+ // Wet sheen bands drifting across, and the painted hopscotch with neon tubes.
+ for(let y=0;y<H;y++){const w=Math.sin(y*.07+t*.4);if(w>.92)for(let x=0;x<W;x++)if(this.d(x,y)<.25)this.px(x,y,this.c('#24254a'));}
+ const lit=(idx)=>{const sq=L[idx];const cx=sq[0]+sq[2]/2;return Math.abs(cx-hx)<sq[2]/2&&f>.5?Math.exp(-(f-.55)*3):0;};
+ L.forEach((sq,idx)=>{const [x0,y0,w,h,lab]=sq,x=x0-camX,g=lit(idx),col=idx%2?'#3af0ff':'#ff3fa4',hot=idx%2?'#d8fdff':'#ffd0ea';
+  if(lab==='CIELO'){this.ellipse(x,y0+h/2,w,h/2,(px,py,dx)=>dx<0?0:this.d(px,py)<.12+g*.3?this.c(col):0);this.ellipse(x,y0+h/2,w,h/2,(px,py,dx,dy)=>dx>=0&&dx*dx+dy*dy>.86?this.c(g>.3?hot:'#ffe14a'):0);this.text('CIELO',x+8,y0+h/2-5,this.c('#ffe14a'),2,1);this.glow(x+w*.4,y0+h/2,40,'#ffe14a',.25+g*.3);return;}
+  if(g>.02)this.rect(x+1,y0+1,w-2,h-2,(px,py)=>this.d(px,py)<g*.5?this.c(col):0);
+  this.glow(x+w/2,y0+h/2,26,col,.22+g*.35+bt.kick*.08);
+  const edge=this.c(g>.3?hot:col);this.rect(x,y0,w,2,edge);this.rect(x,y0+h-2,w,2,edge);this.rect(x,y0,2,h,edge);this.rect(x+w-2,y0,2,h,edge);
+  this.text(lab,x+w/2-this.textW(lab,2,1)/2,y0+h/2-5,this.c(g>.3?'#ffffff':hot),2,1);});
+ // Curb and sidewalk along the top, a lamp's pool of light, a manhole cover — world-anchored so the pan reads.
+ this.rect(0,0,W,22,(x,y)=>this.c(((x+camX)>>3)+(y>>3)&1?'#24223c':'#201e36'));this.rect(0,22,W,3,this.c('#3a3858'));this.rect(0,25,W,2,this.c('#0c0b18'));
+ for(const lx of [150,420]){const x=lx-camX;this.ellipse(x,12,4,4,this.c('#3a3654'));this.glow(x,30,70,'#ffb04a',.22,.7);}
+ {const mx=330-camX,my=150;this.ellipse(mx,my,15,15,this.c('#1e1d34'));this.ellipse(mx,my,15,15,(x,y,dx,dy)=>dx*dx+dy*dy>.8||((x+y)&3)===0?this.c('#2c2b48'):0);}
+ for(const [px,py,rx,ry]of [[250,40,26,7],[470,160,30,8]]){const x=px-camX;this.ellipse(x,py,rx,ry,(xx,yy,dx)=>this.c(this.d(xx,yy)<.3?'#2a2f5a':'#1a1c3c'));this.ellipse(x-rx*.3,py,rx*.3,ry*.4,(xx,yy)=>this.d(xx,yy)<.5?this.c('#ff3fa4'):0);}
+ // Puddle rings from the rain hitting the asphalt.
+ this._puddleRings(t,camX,26);
+ // His shadow on the ground, then him from above (bigger in the air: closer to the lens).
+ const sx=hx-camX,r=15+lift*5;this.ellipse(sx+lift*8,hy+lift*10,16,12,(x,y)=>this.d(x,y)<.55?this.c('#0a0916'):0);
+ this.beginLayer();this.personTop({x:sx,y:hy,r,ang:i>=6&&f>.5?Math.PI*Math.min(1,(f-.5)*2):0,walk:f*.5+i*.5,who:'milton'});this.endLayer(bt.kick>.5?'#ffd0ea':'#ff8fd0',1);
+ this.rain(t,.35,camX,0,.05);
+};
+// A die in 3D: rotated cube, perspective, shaded faces, glowing pips. faces opposite sum 7.
+F._die=function(cx,cy,sz,rx,ry,rz,base,shade,pipCol,noOne){
+ const rot=([x,y,z])=>{let a=Math.cos(rz),b=Math.sin(rz);[x,y]=[x*a-y*b,x*b+y*a];a=Math.cos(ry);b=Math.sin(ry);[x,z]=[x*a+z*b,-x*b+z*a];a=Math.cos(rx);b=Math.sin(rx);[y,z]=[y*a-z*b,y*b+z*a];return [x,y,z];};
+ const prj=([x,y,z])=>{const f=4/(4+z);return [cx+x*sz*f,cy+y*sz*f,f];};
+ const PIPS={1:[[0,0]],2:[[-.5,-.5],[.5,.5]],3:[[-.5,-.5],[0,0],[.5,.5]],4:[[-.5,-.5],[.5,-.5],[-.5,.5],[.5,.5]],5:[[-.5,-.5],[.5,-.5],[0,0],[-.5,.5],[.5,.5]],6:[[-.5,-.6],[.5,-.6],[-.5,0],[.5,0],[-.5,.6],[.5,.6]]};
+ const faces=[[2,-1,1],[2,1,6],[0,1,3],[0,-1,4],[1,-1,2],[1,1,5]],light=[-.4,-.7,-.6],out=[];out.noOne=arguments[9];
+ for(const [ax,sg,val]of faces){const n=[0,0,0];n[ax]=sg;const rn=rot(n);if(rn[2]>=-.02)continue;
+  const P3=(u,v)=>{const p=[0,0,0];p[ax]=sg;p[(ax+1)%3]=u;p[(ax+2)%3]=v;return prj(rot(p));};
+  const corners=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([u,v])=>P3(u*.92,v*.92)),rim=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([u,v])=>P3(u,v));
+  const lum=Math.max(0,-(rn[0]*light[0]+rn[1]*light[1]+rn[2]*light[2]));
+  this.poly(rim,this.c(shade));this.poly(corners,(x,y)=>this.d(x,y)<lum*1.1?this.c(base):this.c(shade));
+  if(val===1){const [fx,fy]=P3(0,0);out.c1=[fx,fy,-rn[2]];}
+  if(pipCol)for(const [u,v]of PIPS[val]){if(val===1&&out.noOne)continue;const [px,py,f]=P3(u*.62,v*.62),r=Math.max(1,sz*f*.17*Math.sqrt(-rn[2]));this.ellipse(px,py,r,r*Math.max(.35,-rn[2]),this.c(pipCol));if(r>2)this.px(px-r*.3,py-r*.3,this.c('#ffffff'));}
+  out.push(val);}
+ return out;
+};
+// ── Low, at street level: two neon dice tumble down the hopscotch toward the lens, bouncing on the beat.
+F.shotDiceRoll=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),dur=Film.bar(16)-(Film.bar(14)-Film.P),u=Math.min(1,lt/dur),hz=64;
+ this.vgrad(0,0,W,hz,['#06061a','#0d0b28','#1a1240','#2a1a50']);
+ for(let i=0;i<10;i++){const bx=(i*41+lt*6)%360-20;this.glow(bx,hz-8-this.rand(i)*30,10+this.rand(i+1)*12,['#ff3fa4','#3af0ff','#ffb04a','#ffe14a'][i%4],.55);}
+ // Ground in perspective: asphalt rows get bigger toward the lens; the hopscotch lines converge to the horizon.
+ for(let y=hz;y<H;y++){const z=(y-hz)/(H-hz),zz=1/(z+.04);for(let x=0;x<W;x++){const wx=(x-160)*zz*.06,wy=zz*3+lt*14,n=this.rand((Math.floor(wx*8)*7919)^(Math.floor(wy*8)*104729));this.px(x,y,this.c(n<.05?'#2a2944':n<.12?'#1b1a33':z<.15?'#100f22':'#15142a'));}}
+ const lines=[-1.6,-.5,.5,1.6];for(const lx of lines)for(let y=hz+1;y<H;y++){const z=(y-hz)/(H-hz),x=160+lx*z*190;this.px(x,y,this.c(Math.abs(lx)>1?'#3af0ff':'#ff3fa4'));if(z>.4)this.px(x+1,y,this.c(Math.abs(lx)>1?'#3af0ff':'#ff3fa4'));}
+ for(let k=0;k<8;k++){const wz=((k*3-lt*14)%24+24)%24,z=3/(wz+1.2)-.1;if(z<0||z>1)continue;const y=hz+z*(H-hz),x0=160-1.6*z*190,x1=160+1.6*z*190;this.rect(x0,y,x1-x0,Math.max(1,z*3),this.c(k%2?'#3af0ff':'#ff3fa4'));}
+ this.reflect(hz+1,hz+40,hz,'#0e0d22',t,1.6,.45);
+ // The dice: far → near, a bounce per beat, spinning.
+ const dice=[[-.6,'#ff4fae','#8a1a5a','#fff0fa',0],[.55,'#4af0ff','#126a7a','#f0ffff',1.7]];
+ for(const [side,base,shade,pip,ph]of dice){const z=.12+u*.78,bx=160+side*z*120+Math.sin(lt*1.3+ph)*6,bounce=Math.abs(Math.sin(bt.b*Math.PI))*(1-u*.6)*34*z,gy=hz+z*(H-hz),sz=10+z*30;
+  this.ellipse(bx,gy,sz*1.1,sz*.28,(x,y)=>this.d(x,y)<.6?this.c('#08070f'):0);this.glow(bx,gy,sz*1.6,base,.3,.3);
+  this._die(bx,gy-sz-bounce,sz,lt*2.4+ph,lt*3.1+ph*2,lt*1.2,base,shade,pip);}
+ this.rain(t,.6,lt*10);
+};
+// ── Close-up: the dice settle showing one pip each — two eyes of an animal in the dark. They blink.
+F.shotDiceEyes=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),push=lt*4;
+ this.vgrad(0,0,W,H,['#04040c','#07071a','#0b0a22','#100c28']);
+ this.glow(160,150,170,'#2a0f3a',.4,.4);
+ // Faint hopscotch neon in the wet ground behind.
+ this.rect(0,124,W,H-124,(x,y)=>this.c(this.rand(x*13+y*71)<.05?'#1f1e38':'#0c0b1c'));
+ this.rect(0,124,W,1,this.c('#3a1a4a'));
+ const ex=[112-push,208+push],sz=46+push*1.5,blinkAt=1.25;
+ ex.forEach((x,i)=>{const base=i?'#3ae8ff':'#ff4fae',shade=i?'#0f5a6a':'#7a1650';
+  this.ellipse(x,124,sz*1.05,sz*.2,(px,py)=>this.d(px,py)<.65?this.c('#050409'):0);
+  // Cube seen almost straight on, slightly from above; its single pip is an eye.
+  const f1=this._die(x,124-sz*.82,sz*.78,.6,(i?-.2:.2)+Math.sin(lt*.6)*.03,0,base,shade,'#120814',true).c1||[x,100];
+  const cy=f1[1],bl=Math.abs(lt-blinkAt)<.09||Math.abs(lt-blinkAt-.25)<.06?.15:1,r=sz*.2;
+  this.glow(x,cy,r*3.4,i?'#9af8ff':'#ffd27a',.55+bt.kick*.2);
+  this.ellipse(x,cy,r,r*bl,(px,py,dx,dy)=>{const d=dx*dx+dy*dy;return d<.16?this.c('#08040a'):this.c(d<.45?'#fff6c0':'#ffb43a');});
+  if(bl>.5){this.rect(x-r*.45,cy-r*.5,2,2,this.c('#ffffff'));}
+  });
+ this.rain(t,.35,lt*6);
+};
+
+// Split screen helper: draw the left frame, keep its left half, draw the right frame, restore the left half; divider line.
+F._split=function(drawL,drawR,div=160){
+ const W=this.W,H=this.H;drawL();const keep=new Uint32Array(W*H);keep.set(this.buf);drawR();
+ for(let y=0;y<H;y++){const o=y*W;for(let x=0;x<div;x++)this.buf[o+x]=keep[o+x];}
+ this.rect(div-1,0,2,H,this.c('#05040a'));
+};
+// A row of shopfronts with small neon signs, sidewalk and wet street; camX scrolls (parallax handled by caller).
+F._storefronts=function(camX,t,neon,seed,gy){
+ const W=this.W,H=this.H,k=Film.beat(t).kick,names=['CAFE','BAR','LIBROS','FOTO','24H','PIZZA','DISCOS','HOTEL','KIOSCO','CINE'];
+ this.vgrad(0,0,W,gy-60,['#05050f','#0a0a20','#141432','#1e1a40']);
+ // Far skyline.
+ for(let i=-1;i<14;i++){const bx=Math.round(i*28-((camX*.2)%28)),id=Math.floor(camX*.2/28)+i,top=10+this.rand(id*7+seed)*30;this.rect(bx,top,26,gy,this.c('#11102a'));for(let wy=top+4;wy<gy-60;wy+=6)for(let wx=bx+3;wx<bx+23;wx+=5)if(this.rand(id*131+wy*7+wx+seed)<.18)this.px(wx,wy,this.c('#ffcf7a'));}
+ // Facades.
+ const fw=74;for(let i=-1;i<6;i++){const id=Math.floor(camX/fw)+i,x=Math.round(id*fw-camX),r=this.rand(id*13+seed),col=['#1d1a36','#221b3a','#1a2038','#251c34'][Math.floor(r*4)],top=gy-96;
+  this.rect(x,top,fw,96,this.c(col));this.rect(x,top,fw,2,this.c('#2e2a4a'));this.rect(x+fw-2,top,2,96,this.c('#14122a'));
+  for(let wx=x+8;wx<x+fw-12;wx+=18)this.rect(wx,top+8,10,12,this.c(this.rand(id*7+wx+seed)<.4?'#ffcf7a':'#0b0a18'));
+  // Shop window with a warm or cool interior, an awning and the neon name.
+  const win=this.rand(id+seed*3)<.5?'#ffcf7a':'#9fe8ff';this.rect(x+8,gy-44,fw-26,30,(xx,yy)=>this.d(xx,yy)<.35?this.c(win):this.c('#3a2a2a'));this.rect(x+8,gy-44,fw-26,2,this.c('#14121e'));
+  for(let j=0;j<3;j++)this.rect(x+14+j*14,gy-24-this.rand(id*5+j)*10,8,12+this.rand(id+j)*8,this.c('#1a1424'));
+  this.rect(x+fw-16,gy-40,10,40,this.c('#0e0c18'));this.rect(x+fw-14,gy-38,6,36,this.c('#16131f'));
+  for(let a=0;a<fw-22;a+=6)this.rect(x+6+a,gy-52,6,6,this.c((a/6)&1?neon[0]:'#e8e0f0'));
+  const nm=names[Math.floor(this.rand(id*29+seed)*names.length)],nc=neon[(id&1)],tw=this.textW(nm,1,1);this.glow(x+fw/2,gy-62,22,nc,.35+k*.25);this.text(nm,x+fw/2-tw/2,gy-64,this.c(k>.6?'#ffffff':nc),1,1);}
+ // Sidewalk, curb, wet street with reflections.
+ this.rect(0,gy,W,8,(xx,yy)=>this.c(((xx+Math.round(camX))>>4)&1?'#2a2844':'#262440'));this.rect(0,gy+8,W,2,this.c('#4a4868'));
+ this.reflect(gy+10,H,gy+9,'#0b0b1e',t,2,.6);
+};
+// ── Split screen: two people walking toward each other in two different streets, not looking for each other.
+F.shotSplitWalk=function(lt,t){
+ const h=92,gy=150,w=walkAt(t),speed=h*.32;
+ this._split(()=>{this._storefronts(lt*speed+40,t,['#ff3fa4','#ffb04a'],3,gy);this.drawMilton(92+lt*3,gy,h,w,'#ff8fd0',1);this.rain(t,.5,lt*10);},
+  ()=>{this._storefronts(-lt*speed+900,t,['#3af0ff','#9a7aff'],11,gy);this.beginLayer();this.person({x:232-lt*3,y:gy,h:h*.97,dir:-1,walk:w+.5,who:'her'});this.endLayer('#5fe8f0',-1);this.rain(t,.5,-lt*10);});
+};
+// ── Overhead map: the wind writes both their routes through the city; the lines meet at the bridge.
+F.shotWindMap=function(lt,t){
+ const W=this.W,H=this.H,dur=Film.bar(21)-Film.bar(19),u=Math.min(1,lt/dur),z=1+u*.18,cx=160,cy=90,bt=Film.beat(t);
+ const S=(x,y)=>[cx+(x-cx)*z,cy+(y-cy)*z];
+ this.clear('#0a0a18');
+ // City blocks with rooftop details; streets with lamp dots; the river cuts across with the bridge.
+ const blk=46,st=12;
+ for(let by=-2;by<6;by++)for(let bx=-2;bx<9;bx++){const x0=bx*(blk+st)+6,y0=by*(blk+st)-4,[a,b]=S(x0,y0),w=blk*z,r=this.rand(bx*31+by*17);
+  this.rect(a,b,w,w,this.c(r<.33?'#1c1a34':r<.66?'#201d3a':'#181730'));this.rect(a,b,w,1,this.c('#2c2a4a'));
+  for(let k=0;k<4;k++){const ux=this.rand(bx*7+by*3+k)*(blk-10),uy=this.rand(bx*3+by*11+k)*(blk-10),[p,q]=S(x0+ux+3,y0+uy+3);if(k===0)this.ellipse(p+3*z,q+3*z,4*z,4*z,this.c('#2a2844'));else this.rect(p,q,5*z,4*z,this.c(k===1?'#26243e':'#14132a'));}
+  if(r>.8){const [p,q]=S(x0+blk/2,y0+blk/2);this.glow(p,q,10*z,'#ff3fa4',.35);}}
+ for(let i=-2;i<9;i++)for(let j=-2;j<6;j++){const [p,q]=S(i*(blk+st)+6+blk+st/2,j*(blk+st)-4+blk+st/2);this.px(p,q,this.c('#ffcf7a'));if(bt.kick>.6)this.glow(p,q,5,'#ffb04a',.4);}
+ // River: a diagonal band with ripples, under the bridge.
+ const riv=(x)=>130+(x-160)*.35;
+ this.rect(0,0,W,H,(x,y)=>{const wx=cx+(x-cx)/z,wy=cy+(y-cy)/z,d=wy-riv(wx);if(Math.abs(d)>13)return 0;if(Math.abs(d)>11.5)return this.c('#2a2848');const r=Math.sin(wx*.45+t*2.5)*Math.sin(wy*.8-t*1.7);return this.c(r>.6&&this.d(x,y)<.6?'#4a5aa0':this.rand(Math.floor(wx)*31+Math.floor(wy)*7)<.006?'#ffcf7a':'#0e1440');});
+ {const [p,q]=S(230,riv(230)),hl=17*z,hw=5*z;this.rect(p-hw,q-hl,hw*2,hl*2,this.c('#2a2440'));for(let yy=-hl;yy<hl;yy+=4)this.line(p-hw,q+yy,p+hw,q+yy+4,this.c('#5e5384'));this.rect(p-hw,q-hl,1,hl*2,this.c('#7a6fa0'));this.rect(p+hw-1,q-hl,1,hl*2,this.c('#7a6fa0'));for(let k=0;k<4;k++){this.px(p-hw-1,q-hl+4+k*9*z,this.c('#ffb04a'));this.px(p+hw,q-hl+8+k*9*z,this.c('#ffb04a'));}}
+ // Routes: polylines along streets, drawn up to the wind's progress.
+ const R1=[[20,93],[70,93],[70,35],[186,35],[186,151],[226,151]],R2=[[310,209],[302,209],[302,93],[244,93],[244,151],[234,151]];
+ const trail=(R,col,head,prog)=>{let L=0;const seg=[];for(let i=1;i<R.length;i++){const l=Math.hypot(R[i][0]-R[i-1][0],R[i][1]-R[i-1][1]);seg.push(l);L+=l;}let rem=L*prog,pt=R[0];
+  for(let i=1;i<R.length&&rem>0;i++){const f=Math.min(1,rem/seg[i-1]),a=R[i-1],b=[R[i-1][0]+(R[i][0]-R[i-1][0])*f,R[i-1][1]+(R[i][1]-R[i-1][1])*f];const [x0,y0]=S(...a),[x1,y1]=S(...b);this.line(x0,y0,x1,y1,this.c(col),2);rem-=seg[i-1];pt=b;}
+  const [hx,hy]=S(...pt);this.glow(hx,hy,12,col,.6);this.ellipse(hx,hy,3,3,this.c(head));return [hx,hy];};
+ const pr=Film.ease(Math.min(1,u*1.12)),a=trail(R1,'#ffd23a','#fff6c0',pr),b=trail(R2,'#ff3a5a','#ffd0d8',pr);
+ if(pr>=1){const [p,q]=S(230,151),r=((lt-dur*.9)*40)%30;this.ellipse(p,q,r,r,(x,y,dx,dy)=>Math.abs(dx*dx+dy*dy-1)<.12?this.c('#ffffff'):0);}
+ // The wind: long pale streaks blowing across, the ones near the routes brighter.
+ for(let i=0;i<60;i++){const sp=60+this.rand(i)*90,x=((this.rand(i*3)*400+t*sp)%400)-40,y=(this.rand(i*7)*220-20+x*.12)%200,len=6+this.rand(i*5)*16;for(let q=0;q<len;q++)if(this.d(Math.round(x+q),Math.round(y+q*.12))<.55*(1-q/len))this.px(x+q,y+q*.12,this.c(i%5?'#8a8ec0':'#e0e4ff'));}
+};
+// ── Her: close-up through the glass of a bus stop, raindrops on the pane.
+F.shotHerIntro=function(lt,t){
+ const W=this.W,H=this.H,k=Film.beat(t).kick,S=112+lt*3;
+ this.vgrad(0,0,W,H,['#05050f','#0a0b22','#121434','#1a1640']);
+ for(const [bx,by,r,col]of [[40,40,30,'#3af0ff'],[90,130,24,'#ff3fa4'],[150,30,20,'#ffb04a'],[30,150,26,'#9a7aff'],[300,160,22,'#3af0ff']])this.glow(bx+lt*4,by,r,col,.6);
+ this.portrait({x:292,y:22,S,who:'her',dir:-1,blink:lt>1.3&&lt<1.42,kick:k,rimFront:'#7af4ff',rimBack:'#ff8fd0'});
+ // Raindrops on the glass in front: round lenses with a highlight, some running down.
+ for(let i=0;i<46;i++){const x=this.rand(i*7)*W,run=i%4===0?((lt*30+this.rand(i)*90)%200):0,y=(this.rand(i*13)*H+run)%H,r=1+this.rand(i*5)*2.2;
+  this.ellipse(x,y,r,r*1.2,(px,py,dx,dy)=>dx*dx+dy*dy>.6?(dy>0&&this.d(px,py)<.6?this.c('#9fb0e0'):0):dy<-.2&&dx<0?this.c('#e8f4ff'):0);if(run)for(let q=1;q<8;q++)if(this.d(Math.round(x),Math.round(y-q*2))<.4)this.px(x,y-q*2,this.c('#4a5a8a'));}
+ this.rect(0,0,W,3,this.c('#2a2840'));this.rect(0,H-6,W,6,this.c('#1c1a30'));this.text('PARADA',8,H-5,this.c('#5a5878'),1,1);
+};
+// ── Him: looking down at the phone; its cold light from below.
+F.shotPhone=function(lt,t){
+ const W=this.W,H=this.H,k=Film.beat(t).kick;
+ this.vgrad(0,0,W,H,['#04040c','#08081c','#0e0c26','#141030']);
+ for(const [bx,by,r,col]of [[260,40,30,'#ff3fa4'],[300,120,22,'#ffb04a'],[220,150,18,'#3af0ff']])this.glow(bx-lt*3,by,r,col,.5);
+ this.portrait({x:40+lt*2,y:26,S:116,who:'milton',dir:1,look:1.5,kick:k,rimFront:'#bfe8ff',rimBack:'#ff8fd0'});
+ // The phone at the bottom edge and its glow on his chin.
+ const px=196,py=150;this.glow(px,py-20,60,'#8fd8ff',.45);
+ this.poly([[px-30,H],[px-18,py-6],[px+30,py-14],[px+38,H]],this.c('#14141f'));this.poly([[px-25,H],[px-15,py-2],[px+26,py-9],[px+33,H]],(x,y)=>this.d(x,y)<.15?this.c('#ffffff'):this.c('#9fe0ff'));
+ for(let i=0;i<4;i++){const bh=3+i*3,bx=px-10+i*5,by=py+16-bh;this.rect(bx,by,3,bh,this.c('#5a8ab8'));this.rect(bx+1,by+1,1,bh-2,this.c('#c8ecff'));}this.line(px+10,py+4,px+16,py+10,this.c('#ff3a5a'),2);this.line(px+16,py+4,px+10,py+10,this.c('#ff3a5a'),2);
+ this.rain(t,.3,lt*8);
+};
+// ── Wide: a street corner; the signs point everywhere; he turns one way, then the other.
+F.shotLost=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),gy=150,push=lt*3;
+ this.vgrad(0,0,W,gy,['#05050f','#0a0a20','#141432','#221a46']);
+ for(let i=0;i<7;i++){const bx=i*48-10,top=30+this.rand(i*5)*40;this.rect(bx,top,44,gy-top,this.c(i&1?'#14132c':'#181632'));for(let wy=top+6;wy<gy-20;wy+=9)for(let wx=bx+5;wx<bx+40;wx+=8)if(this.rand(i*91+wy*3+wx)<.25)this.rect(wx,wy,3,4,this.c('#ffcf7a'));}
+ this.rect(0,gy,W,H-gy,this.c('#14132a'));for(let i=0;i<8;i++)this.rect(60+i*26,gy+10,14,H-gy-10,this.c('#d8dce8'));
+ this.reflect(gy+1,H,gy,'#0b0b1e',t,2,.55);for(let i=0;i<8;i++)this.rect(60+i*26,gy+12,14,3,this.c('#8a8ea8'));
+ // Signpost with arrows in every direction; a traffic light that turns green on the third beat.
+ const sx=200;this.rect(sx,gy-92,3,92,this.c('#3a3658'));
+ const arrow=(y,dir,txt,col)=>{const x0=dir>0?sx+3:sx-44;this.rect(x0,y,41,9,this.c(col));const tip=dir>0?x0+41:x0-1;this.poly([[tip,y-2],[tip+dir*6,y+4.5],[tip,y+11]],this.c(col));this.text(txt,x0+4,y+2,this.c('#14121e'),1,1);};
+ arrow(gy-88,1,'NORTE','#e8e0f0');arrow(gy-76,-1,'SUR','#ffe14a');arrow(gy-64,1,'ESTE','#3af0ff');arrow(gy-52,-1,'OESTE','#ff3fa4');
+ const tl=50;this.rect(tl,gy-80,3,80,this.c('#2a2840'));this.rect(tl-5,gy-100,13,26,this.c('#1a1828'));const green=bt.n%4>=2;
+ this.ellipse(tl+1.5,gy-94,3,3,this.c(green?'#3a1010':'#ff3a3a'));this.ellipse(tl+1.5,gy-82,3,3,this.c(green?'#3aff8a':'#103a20'));this.glow(tl+1.5,green?gy-82:gy-94,16,green?'#3aff8a':'#ff3a3a',.5);
+ // He looks right, left, right — lost.
+ const dir=[1,-1,1,-1][bt.n%4];this.beginLayer();this.person({x:150-push,y:gy+4,h:64,dir,pose:'stand',walk:lt,who:'milton'});this.endLayer('#ff8fd0',dir);
+ // A car's headlights sweep across on the downbeat.
+ const cp=(bt.b%4)/4;if(cp<.5){const x=-60+cp*2*440;this.glow(x,gy+14,40,'#fff6c0',.5,.35);}
+ this.rain(t,.6);
+};
+
+// A hand reaching in from one side: sleeve, cuff, palm and extended fingers. dir 1 reaches right.
+F._hand=function(x,y,s,dir,who,open=1){
+ const P=Film.CAST[who],c=k=>this.c(P[k]),X=(u)=>x+dir*u*s,Y=(v)=>y+v*s;
+ this.quad(X(-3.2),Y(.5),X(-1.2),Y(.1),s*1.25,s*1.05,c('sleeve'));this.quad(X(-1.3),Y(.12),X(-.9),Y(.05),s*1.0,s*.95,c('cuff'));
+ this.poly([[X(-.95),Y(-.42)],[X(-.1),Y(-.5)],[X(.25),Y(-.3)],[X(.3),Y(.32)],[X(-.2),Y(.5)],[X(-.95),Y(.45)]],(px,py)=>py>Y(.25)?c('skinShade'):c('skin'));
+ for(let i=0;i<4;i++){const fy=-.36+i*.24,len=(i===0||i===3?.7:.85)*open+.25;this.quad(X(.2),Y(fy),X(.2+len),Y(fy+.03*i),s*.22,s*.19,i%2?c('skinShade'):c('skin'));}
+ this.quad(X(-.3),Y(-.45),X(.2),Y(-.8),s*.26,s*.22,c('skin'));
+ for(let i=0;i<3;i++)this.px(X(.02),Y(-.24+i*.24),c('skinDark'));
+};
+// ── Close-up: two hands almost touching; between them, a pulse line that beats on the kick.
+F.shotHands=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,dur=Film.bar(26)-Film.bar(24),u=lt/dur,gap=64-u*26;
+ this.vgrad(0,0,W,H,['#05040e','#0a0820','#120c2c','#1a1034']);
+ for(const [bx,by,r,col]of [[40,30,34,'#ff3fa4'],[280,40,30,'#3af0ff'],[160,160,40,'#9a7aff'],[60,150,22,'#ffb04a'],[260,150,26,'#ff3fa4']])this.glow(bx+Math.sin(lt*.4+bx)*6,by,r,col,.45);
+ this.beginLayer();this._hand(160-gap/2-36,94,32,1,'milton');this.endLayer('#ff8fd0',-1);
+ this.beginLayer();this._hand(160+gap/2+36,88,30,-1,'her');this.endLayer('#7af4ff',1);
+ // The pulse: an ECG trace between the fingertips, scrolling; its spike lands on every beat.
+ const x0=160-gap/2+4,x1=160+gap/2-4,amp=16+k*10;let py=null;
+ for(let x=Math.floor(x0);x<=x1;x++){const ph=((x-x0)/(x1-x0+1)+lt*1.0)%1,yy=90+(Math.abs(ph-.5)<.04?-amp*(1-Math.abs(ph-.5)/.04):Math.abs(ph-.58)<.03?amp*.5:0);
+  if(py!==null)this.line(x-1,py,x,yy,this.c(k>.4?'#ffffff':'#ff5a7a'));py=yy;this.glow(x,yy,4,'#ff3a5a',.15);}
+ this.glow(160,90,30+k*20,'#ff3a5a',.25+k*.35);
+};
+// ── The hourglass with sand running upward: time on a false course.
+F.shotHourglass=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,dur=Film.bar(28)-Film.bar(26),u=lt/dur,S=1+u*.12,cx=160,cy=92;
+ this.vgrad(0,0,W,H,['#05040e','#0b0820','#140e2c','#0a0718']);
+ // Clock rings turning backwards behind it.
+ for(const [r,sp,col]of [[78,-.4,'#2a2050'],[104,.25,'#221a44'],[60,-.8,'#3a2a62']]){const R=r*S;for(let a=0;a<60;a++){const ang=a/60*Math.PI*2+lt*sp,x=cx+Math.cos(ang)*R,y=cy+Math.sin(ang)*R;this.rect(x,y,a%5?1:3,a%5?1:3,this.c(col));}}
+ this.glow(cx,cy,80,'#ffb04a',.1+k*.08);
+ const X=v=>cx+v*S,Y=v=>cy+v*S,bulb=(top)=>{const sg=top?-1:1;const pts=[];for(let i=0;i<=20;i++){const a=i/20,y=sg*(4+a*52),w=4+Math.sin(Math.min(1,a*1.15)*Math.PI*.5)*30*(a<.85?1:1-(a-.85)*2.5);pts.push([X(w),Y(y)]);}for(let i=20;i>=0;i--){const a=i/20,y=sg*(4+a*52),w=4+Math.sin(Math.min(1,a*1.15)*Math.PI*.5)*30*(a<.85?1:1-(a-.85)*2.5);pts.push([X(-w),Y(y)]);}return pts;};
+ const sandTop=Math.min(1,.15+u*.85),sandBot=1-u*.85;
+ for(const top of [true,false]){const pts=bulb(top);this.poly(pts,(x,y)=>this.d(x,y)<.18?this.c('#3a3a6a'):this.c('#141432'));
+  // Sand: bottom bulb empties from its floor up; the top bulb fills from its ceiling down — upside-down physics.
+  const lvl=top?Y(-56+sandTop*48):Y(56-sandBot*48);
+  this.poly(pts,(x,y)=>top?(y<lvl?this.c(this.d(x,y)<.3?'#ffe9a0':'#e8b04a'):0):(y>lvl?this.c(this.d(x,y)<.3?'#ffe9a0':'#e8b04a'):0));
+  this.poly(pts,(x,y)=>{const dx=x-cx;return Math.abs(dx)<2&&false?0:0;});}
+ // The thin stream rising through the neck, grains floating up.
+ for(let y=Y(48);y>Y(-50);y--)if(this.d(cx,Math.round(y+lt*60))<.7)this.px(cx,y,this.c('#ffe9a0'));
+ for(let i=0;i<30;i++){const ph=(lt*.8+this.rand(i))%1,x=cx+(this.rand(i*3)-.5)*30*S*ph,y=Y(48)-ph*100*S;if(y>Y(-56))this.px(x,y,this.c('#ffd27a'));}
+ // Glass highlights and the wooden frame with brass caps.
+ for(const sg of [-1,1]){this.line(X(-18),Y(sg*40),X(-24),Y(sg*18),this.c('#c8d8ff'));}
+ this.rect(X(-42),Y(-66),84*S,8*S,this.c('#5a3418'));this.rect(X(-42),Y(-66),84*S,2,this.c('#8a5a2a'));this.rect(X(-42),Y(58),84*S,8*S,this.c('#5a3418'));this.rect(X(-42),Y(58),84*S,2,this.c('#8a5a2a'));
+ for(const sx of [-38,34])this.rect(X(sx),Y(-58),4*S,116*S,(x,y)=>this.c(this.d(x,y)<.3?'#8a5a2a':'#5a3418'));
+ this.rect(X(-46),Y(-68),92*S,2,this.c('#ffcf7a'));this.rect(X(-46),Y(66),92*S,2,this.c('#ffcf7a'));
+};
+
+// ── Three comic panels: he jumps from one frame into the next on the beat; the panel numbers lose count.
+F.shotPanels=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),b0=Math.round((t-lt-Film.BEAT0)/Film.P),k=bt.b-b0,gut=6,pw=(W-gut*4)/3,ph=H-gut*2;
+ this.clear('#05040a');
+ const pal=[['#2a0a2a','#5a1450','#ff3fa4'],['#06222a','#0e4a5a','#3af0ff'],['#2a1606','#5a3410','#ffb04a']];
+ // Where he is: panel index by beat; jumps on beats 2 and 6 (arc across the gutter).
+ // Walk across a panel, jump the gutter on beats 2 and 6, land, keep walking.
+ const pxOf=i=>gut+i*(pw+gut)+pw*.5,keys=[[0,pxOf(0)-26,0],[1.5,pxOf(0)+8,0],[2.4,pxOf(1)-18,1],[5.5,pxOf(1)+14,0],[6.4,pxOf(2)-18,1],[9,pxOf(2)+14,0]];
+ let px=keys[0][1],air=0;for(let j=1;j<keys.length;j++){const [ka,xa]=keys[j-1],[kb,xb,jump]=keys[j];if(k>=ka&&k<kb){const f=(k-ka)/(kb-ka);px=xa+(xb-xa)*f;if(jump)air=Math.sin(f*Math.PI);break;}if(k>=kb)px=xb;}
+ const scramble=k>4;
+ for(let i=0;i<3;i++){const x=gut+i*(pw+gut),[d,m,n]=pal[i];
+  this.vgrad(x,gut,pw,ph,[d,m]);
+  // Halftone dots and speed lines, comic style.
+  this.rect(x,gut,pw,ph,(xx,yy)=>((xx+yy)%6===0&&(yy%6===0)&&this.d(xx,yy)<.6)?this.c(n):0);
+  for(let r=0;r<10;r++){const a=r/10*Math.PI*2+i,cxp=x+pw/2,cyp=gut+ph*.45;this.line(cxp+Math.cos(a)*30,cyp+Math.sin(a)*30,cxp+Math.cos(a)*90,cyp+Math.sin(a)*90,this.c(m));}
+  this.rect(x,gut+ph-24,pw,24,this.c(d));this.rect(x,gut+ph-24,pw,1,this.c(n));
+  const num=scramble?String(Math.floor(this.rand(Math.floor(t*12)*7+i)*99)):String(i+1);this.rect(x+3,gut+3,this.textW(num,2,1)+6,14,this.c('#f4ecd8'));this.text(num,x+6,gut+5,this.c('#14101e'),2,1);
+  this.rect(x,gut,pw,1,this.c('#f4ecd8'));this.rect(x,gut+ph-1,pw,1,this.c('#f4ecd8'));this.rect(x,gut,1,ph,this.c('#f4ecd8'));this.rect(x+pw-1,gut,1,ph,this.c('#f4ecd8'));}
+ // Him: running in the panel, flying over the gutter (drawn over it — breaking the frame).
+ const gy=gut+ph-24;this.beginLayer();this.person({x:px,y:gy-air*40,h:84,dir:1,walk:air>0?.12:walkAt(t),pose:air>0?'run':'walk',who:'milton'});this.endLayer('#ffffff',1);
+ if(air>0)for(let i=0;i<6;i++)this.line(px-30-i*6,gy-60-air*40+i*7,px-60-i*6,gy-60-air*40+i*7,this.c('#f4ecd8'));
+};
+// ── Overhead: the hopscotch never ends and its numbers spin like a slot machine — losing count.
+F.shotCountLost=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),camX=lt*46,q=46,cy=92;
+ this._asphalt(camX,0,t,'#121126');
+ const b0=Math.round((t-lt-Film.BEAT0)/Film.P),k=bt.b-b0,step=Math.floor(k),f=k-step;
+ for(let i=-1;i<9;i++){const id=Math.floor(camX/q)+i,x=Math.round(id*q-camX),dbl=((id%3)+3)%3===2,col=(id&1)?'#3af0ff':'#ff3fa4',hot=(id&1)?'#d8fdff':'#ffd0ea';
+  const cells=dbl?[[cy-q],[cy]]:[[cy-q/2]];
+  for(const [y0]of cells){const spin=Math.floor(t*14+id*3+y0)%10,n=String(this.rand(id*13+y0+Math.floor(t*10))<.5?spin:Math.floor(this.rand(id*7+Math.floor(t*6))*99));
+   this.glow(x+q/2,y0+q/2,24,col,.2+bt.kick*.1);this.rect(x,y0,q,2,this.c(col));this.rect(x,y0+q-2,q,2,this.c(col));this.rect(x,y0,2,q,this.c(col));this.rect(x+q-2,y0,2,q,this.c(col));
+   this.text(n,x+q/2-this.textW(n,2,1)/2,y0+q/2-5,this.c(hot),2,1);
+   // Ghost of the right number, glitching underneath.
+   if(this.rand(Math.floor(t*8)+id)<.3)this.text(String(id),x+q/2-this.textW(String(id),2,1)/2+2,y0+q/2-3,this.c('#5a5878'),2,1);}}
+ this._puddleRings(t,camX,20);
+ // He hops forward, then sideways, losing the pattern; shadow below.
+ const hx=130+Math.sin(step*1.7)*10,hy=cy+Math.sin(step*2.3)*18,lift=Math.sin(Math.min(1,f/.55)*Math.PI),r=15+lift*5;
+ this.ellipse(hx+lift*8,hy+lift*10,16,12,(x,y)=>this.d(x,y)<.55?this.c('#0a0916'):0);
+ this.beginLayer();this.personTop({x:hx,y:hy,r,ang:Math.sin(step*1.3)*.8,walk:f*.5+step*.5,who:'milton'});this.endLayer(bt.kick>.5?'#ffd0ea':'#ff8fd0',1);
+ this.rain(t,.35,camX,0,.05);
+};
+
+// ── The night is a passage: a tunnel of neon arches rushing past; he walks into it, seen from behind.
+F.shotPassage=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,vx=160,vy=78,pr=(x,y,z)=>[vx+x*70/z,vy+y*70/z];
+ this.vgrad(0,0,W,H,['#05040e','#0c0820','#160c2c','#0c0818']);
+ // The far exit: a bright portal.
+ this.glow(vx,vy+6,46,'#ffd0ea',.5);this.rect(vx-6,vy-10,12,26,this.c('#ffe6f4'));
+ // Floor tiles in perspective.
+ for(let y=vy+12;y<H;y++){const z=140/(y-vy),wz=z+lt*3.2;for(let x=0;x<W;x++){const X=(x-vx)*z/70,tile=(Math.floor(X*1.2)+Math.floor(wz*1.2))&1;this.px(x,y,this.c(tile?'#1c1834':'#141028'));}}
+ const N=14,sp=1.8,off=(lt*3.2)%sp;
+ for(let i=N-1;i>=0;i--){const z=.9+i*sp-off;if(z<.6)continue;const id=Math.round((lt*3.2+z)/sp),col=(id&1)?'#ff3fa4':'#3af0ff',lit=((id%4)+4)%4===bt.n%4,w=Math.max(1,3.2/z);
+  const C=this.c(lit?'#ffffff':col);
+  // Pillars and the round top of each arch, plus a light pool on the floor.
+  const [l0,b0]=pr(-3,2,z),[l1,b1]=pr(-3,-1.6,z),[r0]=pr(3,2,z);this.rect(l0-w/2,b1,w,b0-b1,C);this.rect(r0-w/2,b1,w,b0-b1,C);
+  let prev=null;for(let a=0;a<=24;a++){const th=Math.PI+a/24*Math.PI,[x,y]=pr(Math.cos(th)*3,-1.6+Math.sin(th)*2.6,z);if(prev)this.line(prev[0],prev[1],x,y,C,w);prev=[x,y];}
+  if(z<9){const [fx,fy]=pr(0,2,z);this.glow(fx,fy,70/z*2.4,col,(lit?.5:.22)*(1-z/9),.25);if(lit)this.glow((l0+r0)/2,b1,70/z*2,col,.25*(1-z/9));}}
+ // Him from behind, walking into the light.
+ this.beginLayer();this.personBack({x:160,y:166,h:84,walk:walkAt(t),who:'milton'});this.endLayer(k>.5?'#ffd0ea':'#ff8fd0',1);
+};
+// ── Inside the passage, tracking alongside: shutters with tags, a lit kiosk, columns whipping past in front.
+F.shotPassageSide=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,gy=150,speed=80*.32,camX=lt*speed;
+ this.clear('#0c0a1a');
+ // Ceiling with neon tubes that flicker in a beat pattern.
+ this.rect(0,0,W,26,this.c('#100c20'));for(let i=-1;i<6;i++){const x=Math.round(i*70-(camX%70)),id=Math.floor(camX/70)+i,on=((id+bt.n)%3)!==0;this.rect(x+10,14,46,3,this.c(on?((id&1)?'#ff8fd0':'#9ff8ff'):'#2a2440'));if(on)this.glow(x+33,16,40,(id&1)?'#ff3fa4':'#3af0ff',.3+k*.15,.6);}
+ // Back wall: shutters and a kiosk.
+ const fw=86;for(let i=-1;i<5;i++){const id=Math.floor(camX/fw)+i,x=Math.round(id*fw-camX),kiosk=((id%4)+4)%4===1;
+  this.rect(x,30,fw,gy-30,this.c('#191530'));this.rect(x,30,4,gy-30,this.c('#221d3c'));
+  if(kiosk){this.rect(x+10,52,fw-20,gy-60,(xx,yy)=>this.c(this.d(xx,yy)<.25?'#ffe9b0':'#ffcf7a'));for(let r=0;r<4;r++)for(let q=0;q<6;q++)this.rect(x+14+q*10,58+r*16,7,10,this.c(['#ff3fa4','#3af0ff','#ffe14a','#9a7aff'][(q+r+id)&3]));this.glow(x+fw/2,gy-30,60,'#ffb04a',.3);this.text('KIOSCO',x+fw/2-this.textW('KIOSCO',1,1)/2,40,this.c('#ffe14a'),1,1);}
+  else{for(let yy=46;yy<gy;yy+=3)this.rect(x+8,yy,fw-16,2,this.c(yy%6?'#3a3656':'#2c2844'));
+   const tag=['AMOR','ERROR','PULSO','AZAR','NOCHE'][((id%5)+5)%5],tc=['#ff3fa4','#3af0ff','#ffe14a','#9a7aff'][((id%4)+4)%4];this.text(tag,x+14,88,(r,q)=>this.c(r<2?tc:'#ffffff'),2,1);}}
+ // Floor tiles mirror the wall.
+ this.rect(0,gy,W,H-gy,(xx,yy)=>this.c(((xx+Math.round(camX))>>3)+(yy>>3)&1?'#1c1834':'#151129'));
+ this.drawMilton(126,gy,80,walkAt(t),'#ff8fd0',1);
+ this.reflect(gy+1,H,gy,'#100c22',t,1.2,.55);
+ // Foreground arch columns, much closer, sliding fast.
+ const cw=140;for(let i=-1;i<4;i++){const x=Math.round(i*cw-((camX*2.4)%cw)),id=Math.floor(camX*2.4/cw)+i;this.rect(x,0,18,H,this.c('#07060e'));this.rect(x+17,0,2,H,this.c((id&1)?'#ff3fa4':'#3af0ff'));this.glow(x+18,H/2,30,(id&1)?'#ff3fa4':'#3af0ff',.15+k*.1);}
 };
 window.SHOTS=SHOTS;
