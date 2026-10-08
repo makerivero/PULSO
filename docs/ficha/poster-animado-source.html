@@ -1,0 +1,88 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#000">
+<script src="/games.js"></script><script src="/film.js"></script><script src="/bendito.js"></script><script src="/scenes_finale.js"></script>
+<script>
+// Animated 2:3 poster: Milton walks home alone in the rain, a red thread tangled in the cables above.
+const W=270,H=405,HZ=245,VX=135,FL=200,EYE=1.0,T0=225.5;
+const f=new Film();f.W=W;f.H=H;f.canvas.width=W;f.canvas.height=H;f.ctx=f.canvas.getContext('2d');f.image=f.ctx.createImageData(W,H);f.buf=new Uint32Array(f.image.data.buffer);f.L=new Uint32Array(W*H);f.T=f.buf;f.box=null;
+const c=k=>f.c(k);
+window.frame=(t)=>{
+ const lt=t-T0,cz=lt*.075,bt=Film.beat(t),k=bt.kick;
+ const P=(X,Y,Z)=>{const z=Z-cz;return z<.25?null:[VX+X*FL/z,HZ-(Y-EYE)*FL/z,z];};
+ f.T=f.buf;f.box=null;
+ // Sky: deep indigo, a faint violet glow at the end of the street.
+ f.vgrad(0,0,W,HZ+4,['#05050f','#05050f','#090a1c','#11122c','#1b1840','#2a2052','#3a2a62']);
+ f.glow(VX,HZ-10,120,'#3a2262',.35,.6);
+ // Far end of the street: a low wall of buildings, and the iron bridge crossing high.
+ for(let i=0;i<9;i++){const x0=VX-40+i*9,hh=6+f.rand(i*5)*16;f.rect(x0,HZ-hh,9,hh+2,c(i&1?'#141230':'#181636'));if(f.rand(i*3)<.6)f.px(x0+3,HZ-hh+4,c(f.rand(i)<.5?'#ffcf7a':'#9fe8ff'));}
+
+ // Facades: blocks along both sides, drawn far to near, with windows, balconies and a few fuchsia/cyan accents.
+ const blocks=[];for(let i=0;i<16;i++){const z0=1+i*4.2;for(const sd of[-1,1])blocks.push({sd,z0,z1:z0+4.2,h:4.6+f.rand(i*7+(sd>0?3:0))*5.2,id:i*2+(sd>0)});}
+ blocks.sort((a,b)=>b.z0-a.z0);
+ for(const bl of blocks){const X=bl.sd*4.6,a=P(X,0,bl.z0),b=P(X,bl.h,bl.z0),cc=P(X,bl.h,bl.z1),d=P(X,0,bl.z1);if(!a||!d)continue;
+  const col=['#13112a','#17142e','#1a1733','#120f26'][bl.id%4];
+  f.poly([a,b,cc,d],(x,y)=>c(f.d(x,y)<.12?'#221d40':col));
+  // Cornice line on top.
+  f.line(b[0],b[1],cc[0],cc[1],c('#2c2850'),1);
+  for(let Y=1.4;Y<bl.h-.6;Y+=1.5)for(let zz=bl.z0+.5;zz<bl.z1-.6;zz+=1.25){const p0=P(X,Y,zz),p1=P(X,Y+.6,zz+.45);if(!p0||!p1)continue;
+   const r=f.rand(bl.id*977+Math.round(Y*10)*31+Math.round(zz*10)),lit=r<.13,cold=r<.04,flick=lit&&f.rand(Math.floor(t*3)+bl.id)<.01;
+   const wc=lit&&!flick?(cold?'#9fe8ff':'#ffcf7a'):'#0b0a18';f.poly([[p0[0],p0[1]],[p0[0],p1[1]],[p1[0],P(X,Y+.6,zz+.45)[1]],[p1[0],P(X,Y,zz+.45)[1]]],c(wc));
+   if(lit&&p0[2]<14)f.glow((p0[0]+p1[0])/2,(p0[1]+p1[1])/2,Math.max(3,18/p0[2]),cold?'#3af0ff':'#ffb04a',.25);
+   if(r>.82){const q0=P(X,Y-.05,zz-.1),q1=P(X,Y-.05,zz+.75);if(q0&&q1)f.line(q0[0],q0[1],q1[0],q1[1],c('#2a2648'),Math.max(1,3/q0[2]));}}
+  if(bl.id%5===2){const n0=P(X,3,bl.z0+.6),n1=P(X,3.25,bl.z0+2.2);if(n0&&n1){const nc=bl.id%10===2?'#ff3fa4':'#3af0ff';f.poly([[n0[0],n0[1]],[n0[0],n1[1]],[n1[0],P(X,3.25,bl.z0+2.2)[1]],[n1[0],P(X,3,bl.z0+2.2)[1]]],c(nc));f.glow((n0[0]+n1[0])/2,n0[1],Math.max(6,40/n0[2]),nc,.35+k*.15);}}}
+ {const z=18,y0=P(0,3.6,z),y1=P(0,5.2,z);if(y0){const xl=P(-5.2,0,z)[0],xr=P(5.2,0,z)[0],a=y0[1],b=y1[1],iron=c('#2a2440');f.rect(xl,b,xr-xl,2,iron);f.rect(xl,a,xr-xl,2,iron);f.rect(xl,b,xr-xl,1,c('#5e5384'));const pw=(xr-xl)/9;for(let i=0;i<9;i++){const x=xl+i*pw;f.line(x,a,x+pw,b,iron);f.line(x,b,x+pw,a,iron);f.px(x,a-1,c('#ffb04a'));}f.glow(VX,a,30,'#ffb04a',.25,.3);}}
+ // Street floor: asphalt, sidewalks, then the wet mirror of everything above the horizon.
+ for(let y=HZ+1;y<H;y++){const z=EYE*FL/(y-HZ);for(let x=0;x<W;x++){const X=(x-VX)*z/FL,ax=Math.abs(X),wz=z+cz;let col;
+   if(ax>3.25)col=((Math.floor(wz*1.2)+Math.floor(X*1.2))&1)?'#1e1c36':'#1a1830';else if(ax>3.1)col='#3a3858';else col=f.rand((Math.floor(X*14)*7919)^(Math.floor(wz*14)*104729))<.06?'#24223c':'#121126';f.px(x,y,c(col));}}
+ f.reflect(HZ+1,H,HZ,'#0a0a1c',t,2.2,.62);
+ for(let y=HZ+2;y<H;y++){const z=EYE*FL/(y-HZ),wz=z+cz;if(((wz%3)+3)%3<1.4){const hw=Math.max(.5,.07*FL/z);if(f.d(VX,y)<.55)f.rect(VX-hw/2,y,hw,1,c('#5a5034'));}}
+ // Poles, sodium lamps with rain-lit cones, and the cable web.
+ const poles=[];for(let i=0;i<9;i++){poles.push({sd:-1,z:3+i*6});poles.push({sd:1,z:6+i*6});}
+ poles.sort((a,b)=>b.z-a.z);const tops={};
+ for(const p of poles){const b=P(p.sd*3.7,0,p.z),tp=P(p.sd*3.7,7.2,p.z);if(!b||!tp)continue;const w=Math.max(1,Math.round(.9/b[2]*4));tops[p.sd+':'+p.z]=tp;
+  f.rect(b[0]-w/2,tp[1],w,b[1]-tp[1],c('#0e0c1c'));f.rect(b[0]-w/2,tp[1],1,b[1]-tp[1],c('#2a2648'));
+  const ca=P(p.sd*3.7-.9,7.0,p.z),cb=P(p.sd*3.7+.9,7.0,p.z);if(ca&&cb)f.line(ca[0],ca[1],cb[0],cb[1],c('#0e0c1c'),Math.max(1,w*.7));
+  // Lamp arm toward the street.
+  const la=P(p.sd*3.7,5.6,p.z),lb=P(p.sd*2.6,5.6,p.z);if(la&&lb){f.line(la[0],la[1],lb[0],lb[1],c('#0e0c1c'),Math.max(1,w*.6));f.rect(lb[0]-w,lb[1],w*2,Math.max(1,w*.6),c('#ffcf8a'));
+   const g0=P(p.sd*2.6-.9,0,p.z),g1=P(p.sd*2.6+.9,0,p.z);if(g0&&g1&&b[2]<30){const amt=.075*(1-b[2]/30)+k*.02;f.poly([[lb[0],lb[1]],[g0[0],g0[1]],[g1[0],g1[1]]],(x,y)=>f.d(x,y)<amt?c('#ffb04a'):0);f.glow(lb[0],lb[1],Math.max(5,40/b[2]),'#ffb04a',.45);f.glow((g0[0]+g1[0])/2,g0[1],Math.max(6,60/b[2]),'#ffb04a',.25,.25);
+    // Rain shows inside the cone.
+    for(let i=0;i<14;i++){const u=f.rand(i*7+p.z),ph=(t*1.6+f.rand(i*3+p.z))%1,x=lb[0]+(g0[0]-lb[0])*(1-u)*ph+(g1[0]-lb[0])*u*ph,y=lb[1]+(g0[1]-lb[1])*ph;f.line(x,y,x-1,y+Math.max(2,9/b[2]),c('#ffe0a8'));}}}}
+ const cable=(a,b,sag)=>{const pts=[];const n=Math.max(8,Math.ceil(Math.abs(b[0]-a[0])+Math.abs(b[1]-a[1])));for(let i=0;i<=n;i++){const u=i/n;pts.push([a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u+Math.sin(u*Math.PI)*sag]);}return pts;};
+ const drawCable=(pts,col)=>{for(let i=1;i<pts.length;i++)f.line(pts[i-1][0],pts[i-1][1],pts[i][0],pts[i][1],col);};
+ const cab=c('#07060e');let threadCable=null;
+ for(let i=0;i<8;i++){for(const sd of[-1,1]){const z=(sd<0?3:6)+i*6,a=tops[sd+':'+z],b=tops[sd+':'+(z+6)];if(a&&b){drawCable(cable(a,b,6/Math.max(1,a[2]*.3)),cab);drawCable(cable([a[0],a[1]+3],[b[0],b[1]+2],5/Math.max(1,a[2]*.3)),cab);}}
+  const L=tops['-1:'+(3+i*6)],R=tops['1:'+(6+i*6)];if(L&&R){const pts=cable(L,R,14/Math.max(1,L[2]*.25));drawCable(pts,cab);if(i===1)threadCable=pts;}
+  const R2=tops['1:'+(i*6)];if(L&&R2)drawCable(cable(L,R2,10/Math.max(1,L[2]*.3)),cab);}
+ // Milton, seen from behind, head down, walking away; his broken reflection under him.
+ const MX=135,MY=302,MH=100;
+ f.beginLayer();f.personBack({x:MX,y:MY,h:MH,walk:walkAt(t),who:'milton',bow:1});
+ // Wet sheen: a few drips on the jacket and the beanie.
+ for(let i=0;i<6;i++){const ph=(t*.9+f.rand(i))%1,x=MX-10+f.rand(i*3)*20,y=MY-80+ph*40;f.px(x,y,c('#d8fdff'));}
+ f.endLayer('#ffb04a',1);
+ {const L=f.L,buf=f.buf;for(let dy=1;dy<38;dy++){const sy=MY-dy,ty=MY+dy;if(ty>=H||sy<0)break;const wob=Math.round(Math.sin(dy*.7+t*4)*1.5);for(let x=MX-30;x<MX+30;x++){const v=L[sy*W+x];if(!v)continue;const xx=x+wob;if(xx<0||xx>=W)continue;if(f.d(xx,ty)<.55*(1-dy/38)&&(dy%3)!==0)buf[ty*W+xx]=(((v&0xfefefe)>>>1)+((0x1a0a0a&0xfcfcfc)>>>2)|0xff000000)>>>0;}}}
+ // The red thread: born at the upper-left pole, runs along a cable, then falls in a long loose curve toward him.
+ if(threadCable){const n=threadCable.length,cut=Math.floor(n*.42),along=threadCable.slice(0,cut+1),start=along[along.length-1];
+  const sway=Math.sin(t*.9)*4,end=[MX+15,MY-60+Math.sin(t*1.3)*2];const c1=[start[0]+30+sway,start[1]+50],c2=[end[0]+40-sway,end[1]-70];
+  const fall=[];for(let i=1;i<=60;i++){const u=i/60,iu=1-u;fall.push([iu*iu*iu*start[0]+3*iu*iu*u*c1[0]+3*iu*u*u*c2[0]+u*u*u*end[0]+Math.sin(u*9+t*2)*1.2*Math.sin(u*Math.PI),iu*iu*iu*start[1]+3*iu*iu*u*c1[1]+3*iu*u*u*c2[1]+u*u*u*end[1]]);}
+  const pts=along.map(p=>[p[0],p[1]+.5]).concat(fall);
+  const boost=(t>226&&t<230)?.35:(t>239.4)?.45:0,g=.45+boost+k*.08;
+  for(let i=1;i<pts.length;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i];const m=Math.max(1,Math.ceil(Math.hypot(x1-x0,y1-y0)));for(let j=0;j<=m;j++){const x=x0+(x1-x0)*j/m,y=y0+(y1-y0)*j/m;
+    if(j===0&&i%2===0)for(let q=-3;q<=3;q++)if(q&&f.d(Math.round(x),Math.round(y+q))<g*(1-Math.abs(q)/4)*.55)f.px(x,y+q,c('#a0142a'));
+    f.px(x,y,c('#ff2a3a'));if(f.d(Math.round(x),Math.round(y))<.18+boost*.4)f.px(x,y-1,c('#ff9a9a'));}}
+  f.glow(end[0],end[1],10,'#ff3a5a',.35+boost);}
+ // Rain everywhere, splashes on the street.
+ f.rain(t,1.15,0,0,.08);
+ for(let i=0;i<26;i++){const ph=(t*2.2+f.rand(i))%1,x=f.rand(i*5+Math.floor(t*2.2+f.rand(i)))*W,y=HZ+20+f.rand(i*9+Math.floor(t*2.2+f.rand(i)))*(H-HZ-20);if(ph<.35){const r=1+ph*6;f.px(x-r,y,c('#8a8ec0'));f.px(x+r,y,c('#8a8ec0'));f.px(x,y-1,c('#c8ccf0'));}}
+ // Darken the foot of the poster so the title reads.
+ f.rect(0,312,W,H-312,(x,y)=>f.d(x,y)<Math.min(.85,(y-312)/60)?c('#05040c'):0);
+ // Top lines: dim until each is sung, then they light up.
+ const lines=[['NO SOMOS LIBRES.',230.3],['SOMOS RESPONSABLES',232.2],['DE LA BELLEZA DE ESTE ERROR.',235.5]];
+ lines.forEach(([ln,ts],i)=>{const s=2,x=Math.round((W-f.textW(ln,s,1))/2),y=14+i*15,on=Math.min(1,Math.max(0,(t-ts)/.35));
+  f.text(ln,x+1,y+1,c('#05040c'),s,1);f.text(ln,x,y,c(on>=1?'#fff1c2':on>0?'#c8bfa0':'#5a5670'),s,1);});
+ // Title.
+ const ink=c('#120a18'),ramp=['#fff1c2','#fff1c2','#ffc46b','#ff7a5c'],shadow=c('#05040c');
+ [['BENDITO',318],['ERROR',354]].forEach(([ln,y0])=>{const s=6,x0=Math.round((W-f.textW(ln,s,1))/2);
+  for(let n=0;n<ln.length;n++){const g=ArcadeGame.font[ln[n]],x=x0+n*4*s;for(let pass=0;pass<3;pass++)for(let r=0;r<5;r++)for(let q=0;q<3;q++){if(g[r*3+q]!=='1')continue;const bx=x+q*s,by=y0+r*s;
+   if(pass===0)f.rect(bx+2,by+3,s,s,shadow);else if(pass===1)f.rect(bx-1,by-1,s+2,s+2,ink);else f.rect(bx,by,s,s,(i,j)=>c(ramp[Math.min(3,Math.floor((r*s+(j-by))/(5*s)*3.99+f.d(i,j)))]));}}});
+ const nm='MILTON VALENZUELA',nx=Math.round((W-f.textW(nm,1,3))/2);f.text(nm,nx,392,c('#e8f6ff'),1,3);
+ f.ctx.putImageData(f.image,0,0);return f.canvas.toDataURL();};
+</script>

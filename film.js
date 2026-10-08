@@ -112,7 +112,7 @@ class Film {
  // Person seen from behind, walking away (or toward the lens with front:true). o: {x, y (ground), h, walk, who}
  personBack(o){
   const P=Film.CAST[o.who||'milton'],c=k=>this.c(P[k]),h=o.h,a=(o.walk||0)*Math.PI*2,X=o.x,G=o.y,bob=Math.abs(Math.cos(a))*h*.012;
-  const hipY=G-h*.47-bob,shY=G-h*.79-bob,hw=h*.075,sw=h*.12,q=h*.16,hy=G-h+q*.52-bob;
+  const bw=o.bow||0,hipY=G-h*.47-bob,shY=G-h*.79-bob+bw*h*.012,hw=h*.075,sw=h*.12*(1-bw*.06),q=h*.16,hy=G-h+q*.52-bob+bw*q*.32;
   for(const i of [0,1]){const ai=a+i*Math.PI,lift=Math.max(0,Math.cos(ai))*h*.05,fx=X+(i?-1:1)*h*.05,fy=G-lift-Math.max(0,Math.sin(ai))*h*.02,col=c(i?'jeansShade':'jeans');
    this.quad(X+(i?-1:1)*hw*.5,hipY,fx,fy-h*.04,h*.085,h*.065,col);this.rect(fx-h*.035,fy-h*.045,h*.07,h*.045,c('shoe'));this.rect(fx-h*.035,fy-h*.012,h*.07,Math.max(1,h*.012),c('sole'));}
   for(const i of [0,1]){const sgn=i?-1:1,ai=a+i*Math.PI,sw2=Math.sin(ai)*h*.03,hx=X+sgn*sw*1.05,hyy=shY+h*.3+sw2;this.quad(X+sgn*sw*.8,shY+h*.03,hx,hyy,h*.075,h*.06,c('sleeveShade'));this.ellipse(hx,hyy+h*.02,h*.03,h*.034,c('skinShade'));}
