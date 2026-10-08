@@ -415,19 +415,19 @@ F.shotSkyTilt=function(lt,t){
   this._finBridgeFront(30,deck,top);
   if(deck+10<H)this.reflect(deck+10,H,deck+9,'#07071a',t,2.4,.65);
  }else hands=[160,Y(150-h*1.1)];
- // The thread: rises from their hands (world y ≈ 112) to star A, then is drawn across to star B.
- const A=[128,-318],Bs=[214,-292],rise=Film.ease((lt-1.4)/9.8),tipW=112-(112-A[1])*rise,hx=hands[0];
- const sway=(wy)=>Math.sin(wy*.02+lt*.8)*6*(1-rise*.5);
- if(lt>1.4){const ax=hx+(A[0]-hx)*((112-tipW)/(112-A[1]));this._finThreadLine(hx,hands[1],ax,Y(tipW),t,.8,3*(1-rise));this.glow(ax,Y(tipW),8,'#ff5a6a',.6);}
- const across=Film.ease((lt-11.2)/2.2);
- const sa=Math.min(1,Math.max(0,(lt-10.8)/.6)),sb=Math.min(1,Math.max(0,(lt-13.2)/.5));
- // Faint constellation lines around the pair of stars, appearing once the line closes.
- const cons=[[A,[96,-286]],[[96,-286],[80,-344]],[Bs,[250,-336]],[[250,-336],[268,-300]],[A,[150,-352]],[[150,-352],[196,-348]],[[196,-348],[250,-336]]];
- if(sb>0)for(const [p,q] of cons){const n=Math.ceil(Math.hypot(q[0]-p[0],q[1]-p[1]));for(let i=0;i<n;i+=2){const x=p[0]+(q[0]-p[0])*i/n,y=Y(p[1]+(q[1]-p[1])*i/n);if(this.d(Math.round(x),y)<sb*.7)this.px(x,y,this.c('#6a6ab8'));}}
- for(const s of [[96,-286],[80,-344],[250,-336],[268,-300],[150,-352],[196,-348]])this._finStar(s[0],Y(s[1]),2,'#9fb8ff',t);
- if(across>0){const bx=A[0]+(Bs[0]-A[0])*across,by=A[1]+(Bs[1]-A[1])*across;this._finThreadLine(A[0],Y(A[1]),bx,Y(by),t,.9,1.2*(1-across));this.glow(bx,Y(by),8,'#ff5a6a',.6);}
- this._finStar(A[0],Y(A[1]),3+Math.round(sa*3),sa>0?'#ffd0d8':'#c8c8f0',t);
- this._finStar(Bs[0],Y(Bs[1]),3+Math.round(sb*3+ (sb>0?k*1.5:0)),sb>0?'#ffd0d8':'#c8c8f0',t);
+ // The thread rises from their hands to 41 Arietis, then stitches the constellation of Aries:
+ // 41 Ari → Hamal (α, the brightest) → Sheratan (β) → Mesarthim (γ). Each star flares as the thread reaches it.
+ const ARIES=[[84,-338],[168,-312],[214,-296],[223,-279]],A=ARIES[0],rise=Film.ease((lt-1.4)/9.8),tipW=112-(112-A[1])*rise,hx=hands[0];
+ if(lt>1.4){const ax=hx+(A[0]-hx)*((112-tipW)/(112-A[1]));this._finThreadLine(hx,hands[1],ax,Y(tipW),t,.8,3*(1-rise));if(rise<1)this.glow(ax,Y(tipW),8,'#ff5a6a',.6);}
+ const segT=[11.2,12.5,13.4],segD=[1.3,.9,.6],reach=[11.2];
+ for(let i=0;i<3;i++){const p=ARIES[i],q=ARIES[i+1],f=Film.ease((lt-segT[i])/segD[i]);reach.push(segT[i]+segD[i]);if(f<=0)continue;
+  const bx=p[0]+(q[0]-p[0])*f,by=p[1]+(q[1]-p[1])*f;this._finThreadLine(p[0],Y(p[1]),bx,Y(by),t,.9,.8*(1-f));if(f<1)this.glow(bx,Y(by),8,'#ff5a6a',.6);}
+ // Faint background stars of the ram, then the name once the figure is complete.
+ for(const s2 of [[120,-350],[196,-330],[240,-262],[150,-284]])this._finStar(s2[0],Y(s2[1]),1,'#8a9ad8',t);
+ ARIES.forEach((st,i)=>{const on=Math.min(1,Math.max(0,(lt-reach[i])/.4)),big=i===1?2:i===3?0:1,fl=on>0&&on<1?Math.round((1-on)*3):0;
+  this._finStar(st[0],Y(st[1]),2+big+Math.round(on*2)+fl+(on>=1&&i===1?Math.round(k*1.5):0),on>0?'#ffd0d8':'#c8c8f0',t);});
+ const lab=Math.min(1,Math.max(0,(lt-14.4)/.8));
+ if(lab>0){const tx=Math.round(ARIES[1][0]-this.textW('ARIES',2,2)/2),ty=Y(-296)+22;this.text('ARIES',tx,ty,(r,q)=>this.d(tx+q*2,ty+r*2)<lab*.95?this.c('#d8c8ff'):0,2,2);}
 };
 
 // ── End title over the starry sky: BENDITO ERROR drops in letter by letter (same rendering as shotTitle), the name types
