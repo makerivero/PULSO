@@ -490,3 +490,148 @@ F.shotHeart=function(lt,t){
  // The pulse lands in the headphones.
  const [cx,cy]=U(.42,.5),land=Math.max(0,1-Math.abs(bt.ph-.8)*4);if(land>0){this.glow(cx,cy,20+land*10,'#ff3fa4',land*.7);for(let q=0;q<3;q++){const r=16+q*6+land*6;this.ellipse(cx,cy,r,r*1.2,(x,y,dx,dy)=>Math.abs(dx*dx+dy*dy-1)<.08&&dx<-.2&&this.d(x,y)<land?this.c('#ffd0ea'):0);}}
 };
+
+// Finish a character layer as a backlit silhouette: flat dark fill, a rim of light on both sides and on top, dark outline.
+F._ch_silEnd=function(fill,rimL,rimR,rimT,ink='#05030a'){
+ this.T=this.buf;const b=this.box;this.box=null;if(!b||b[2]<0)return;const L=this.L,W=this.W,H=this.H,f=this.c(fill),rl=this.c(rimL),rr=this.c(rimR),rt=this.c(rimT||rimL),o=this.c(ink);
+ const at=(x,y)=>x>=0&&y>=0&&x<W&&y<H&&L[y*W+x];
+ for(let y=Math.max(0,b[1]-1);y<=Math.min(H-1,b[3]+1);y++)for(let x=Math.max(0,b[0]-1);x<=Math.min(W-1,b[2]+1);x++){
+  if(!L[y*W+x]){if(at(x-1,y)||at(x+1,y)||at(x,y-1)||at(x,y+1))this.buf[y*W+x]=o;continue;}
+  this.buf[y*W+x]=!at(x-1,y)?rl:!at(x+1,y)?rr:!at(x,y-1)?rt:(!at(x-2,y)&&this.d(x,y)<.5)?rl:(!at(x+2,y)&&this.d(x,y)<.5)?rr:f;}
+};
+// A passer-by under an umbrella, in silhouette.
+F._ch_passer=function(x,gy,h,dir,t,seed,rim){
+ this.beginLayer();const o=this.person({x,y:gy,h,dir,walk:((t-Film.BEAT0)/Film.P)/2*.5+seed,who:seed&1?'her':'milton',pose:'walk',arms:[[.9,1.4],[0,.3]]});
+ const [hx,hy]=o.hands[0];this.line(hx,hy,hx,gy-h*1.12,0xff222222,1);this.poly([[hx-h*.36,gy-h*1.02],[hx-h*.25,gy-h*1.14],[hx,gy-h*1.2],[hx+h*.25,gy-h*1.14],[hx+h*.36,gy-h*1.02]],0xff222222);
+ this._ch_silEnd('#0c0918',rim,rim,rim,'#0c0918');
+};
+
+// ── Instrumental: Milton dances under a street lamp on a wet corner; light cone, reflections, passers-by; slow pan.
+F.shotStreetDance=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,camX=lt*9-20,gy=146;
+ this.vgrad(0,0,W,gy,['#05050f','#0a0a22','#141236','#20184a','#30205a']);
+ for(let i=0;i<40;i++){const x=((this.rand(i*3)*360-camX*.05)%360+360)%360-20,y=this.rand(i*7)*60;this.px(x,y,this.c(this.rand(i)<.2?'#e8e4ff':'#5a5888'));}
+ this._ch_skyline(camX,.15,gy-30,31,30,90,['#0e0d24','#12112c','#24204a'],t,.12);
+ // Corner building: a face-on facade and a side receding into the cross street, a corner bar at street level.
+ const bx=40-camX*.6,cw=150,top=26,side=58;
+ this.rect(bx,top,cw,gy-top-8,(x,y)=>{const row=Math.floor((y-top)/4),u=(x-bx+(row&1)*4);return this.c((y-top)%4===0||u%8===0?'#1a1430':'#241a3a');});
+ this.poly([[bx+cw,top],[bx+cw+side,top+16],[bx+cw+side,gy-14],[bx+cw,gy-8]],(x,y)=>this.c(((x-bx-cw)%7===0)?'#120e22':'#191430'));
+ this.rect(bx,top-3,cw,4,this.c('#3a2e58'));this.line(bx+cw,top-3,bx+cw+side,top+13,this.c('#3a2e58'),3);
+ for(let fy=top+10;fy<gy-50;fy+=22)for(let fx=bx+12;fx<bx+cw-14;fx+=28){const h2=this.rand(fx*7+fy*3+5);this.rect(fx,fy,14,14,this.c(h2<.4?'#d89a50':'#0c0a1a'));if(h2<.4){this.rect(fx,fy,14,3,this.c('#ffcf7a'));this.rect(fx+6,fy,1,14,this.c('#5a3a2a'));}this.rect(fx-1,fy+14,16,2,this.c('#3a3050'));}
+ for(let fy=top+24;fy<gy-50;fy+=22)for(let q=0;q<2;q++){const fx=bx+cw+12+q*24,yy=fy+q*6;this.poly([[fx,yy],[fx+10,yy+3],[fx+10,yy+16],[fx,yy+13]],this.c(this.rand(fy+q*31)<.4?'#a8703a':'#0a0816'));}
+ // Bar at the corner: lit window and a neon sign.
+ const sy=gy-40;this.rect(bx+10,sy,cw-20,30,(x,y)=>this.c(this.d(x,y)<.3?'#ffcf7a':'#b8783a'));for(let q=0;q<5;q++)this.rect(bx+16+q*26,sy+14,10,16,this.c('#3a2420'));this.rect(bx+10,sy+12,cw-20,2,this.c('#3a2420'));
+ const nx=bx+cw/2-this.textW('ESQUINA',2,1)/2;this.rect(nx-4,sy-18,this.textW('ESQUINA',2,1)+8,15,this.c('#0e0b1a'));this.glow(nx+40,sy-11,46,'#ff3fa4',.3+k*.3,.4);this.text('ESQUINA',nx,sy-15,this.c(k>.6?'#ffd0ea':'#ff5fb4'),2,1);
+ // Far sidewalk, passers-by with umbrellas.
+ this.rect(0,gy-10,W,4,this.c('#2a2440'));this.rect(0,gy-6,W,H,this.c('#100e20'));
+ for(let i=0;i<3;i++){const x=((i*140+lt*(12+i*5)*(i&1?-1:1)-camX*.65)%420+420)%420-50;this._ch_passer(x,gy-9,38-i*3,i&1?-1:1,t+i,i*3+1,'#4a3c78');}
+ // Near curb and the lamp.
+ this.rect(0,gy-2,W,3,this.c('#4a4468'));
+ const lx=180-camX,ly=22,cx0=lx+22;
+ this.poly([[cx0-6,ly+6],[cx0+6,ly+6],[cx0+58,gy+4],[cx0-58,gy+4]],(x,y)=>this.d(x,y)<(.18+k*.08)*(1-(y-ly)/(gy-ly)*.4)?this.c('#ffb04a'):0);
+ this.glow(cx0,gy+2,70,'#ffb04a',.55+k*.15,.22);
+ // Milton dances in the pool of light.
+ this.beginLayer();this.person({x:cx0,y:gy,h:84,dir:Math.floor(bt.n/4)%2?-1:1,pose:'dance',beat:bt.ph,who:'milton'});this.endLayer(k>.5?'#fff0c0':'#ffcf7a',1);
+ this.rect(lx-1,ly,4,gy-ly,this.c('#1c1830'));this.rect(lx,ly,1,gy-ly,this.c('#5a5078'));this.rect(lx-3,gy-8,8,8,this.c('#1c1830'));
+ this.line(lx+1,ly,lx+14,ly-7,this.c('#1c1830'),3);this.rect(cx0-10,ly-9,20,6,this.c('#2a2440'));this.rect(cx0-8,ly-4,16,2,this.c('#fff1c8'));this.glow(cx0,ly,30,'#ffcf7a',.55+k*.2);
+ // Rain catches the lamp light inside the cone.
+ for(let i=0;i<70;i++){const x=cx0-50+this.rand(i*3)*100,y=((this.rand(i*7)*160+t*300)%160)+ly,in2=Math.abs(x-cx0)<(y-ly)*.42+6;if(!in2)continue;for(let q=0;q<5;q++)this.px(x+q*.18,y+q,this.c('#ffe9b0'));}
+ this.reflect(gy+2,H,gy+1,'#0a0918',t,1.6,.7);
+ // Foreground bollard in silhouette.
+ const fx=260-camX*1.6;this.rect(fx,118,14,H-118,this.c('#06050c'));this.rect(fx-2,114,18,6,this.c('#06050c'));this.rect(fx+1,116,12,1,this.c('#3a3058'));
+ this.rain(t,.5,camX);
+};
+
+// ── «oh-oh-oh»: Milton dances in silhouette in front of a giant LED wall of chunky pixels: EQ bars, then waves, then a ring.
+F.shotLedWall=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,fy=140,drift=Math.sin(lt*.6)*6+lt*3,pitch=8;
+ this.rect(0,0,W,H,this.c('#05030a'));
+ const mode=lt<1.33?0:lt<2.67?1:2,cols=Math.ceil(W/pitch)+2,rows=Math.ceil(fy/pitch);
+ const ramp=['#3af0ff','#3af0ff','#7a8aff','#ff3fa4','#ff3fa4','#ffb04a','#ffe14a'];
+ let dom='#3af0ff';
+ for(let c=0;c<cols;c++)for(let r=0;r<rows;r++){const x=Math.round(c*pitch-(drift%pitch)),y=r*pitch+2,cc=c+Math.floor(drift/pitch),rb=rows-1-r;let col=null,dim=false;
+  if(mode===0){const hgt=Math.round((.25+.75*this.rand(cc*31+bt.n*7))*(.55+.45*k)*rows);if(rb<hgt)col=ramp[Math.min(6,Math.floor(rb/rows*7))];else if(rb===hgt+1&&this.rand(cc+bt.n)<.7)col='#ffffff';}
+  else if(mode===1){const w1=rows*.5+Math.sin(cc*.32+t*5)*rows*.28*(.7+.3*k),w2=rows*.5+Math.sin(cc*.21-t*4+1)*rows*.2;if(Math.abs(rb-w1)<1.2)col='#3af0ff';else if(Math.abs(rb-w2)<1)col='#ff3fa4';else if(rb<w1)dim=true;dom='#3af0ff';}
+  else{const d=Math.hypot(cc-cols/2-drift/pitch,(r-rows/2)*1.0),rr=bt.ph*24;if(Math.abs(d-rr)<1.3)col=bt.n&1?'#ff3fa4':'#ffe14a';else if(Math.abs(d-rr-12)<.9)col='#7a3a8a';else if(d<3+k*3)col='#ffffff';dom=bt.n&1?'#ff3fa4':'#ffe14a';}
+  const cv=col?this.c(col):this.c(dim?'#1a3040':'#140c22');this.rect(x+1,y,5,7,cv);this.rect(x,y+1,7,5,cv);if(col)this.px(x+2,y+1,this.c('#ffffff'));}
+ if(mode===0)dom=k>.5?'#ff3fa4':'#3af0ff';
+ // Wall frame and the stage edge.
+ this.rect(0,fy-4,W,4,this.c('#1a1626'));this.rect(0,fy-4,W,1,this.c('#4a4462'));
+ this.glow(160,fy,150,dom,.3+k*.2,.25);
+ // Milton in silhouette with a strong rim.
+ const X=160+Math.sin(lt*.8)*6-drift*.3;
+ this.beginLayer();this.person({x:X,y:fy+16,h:118,dir:Math.floor(bt.n/2)%2?-1:1,pose:'dance',beat:bt.ph,who:'milton'});this._ch_silEnd('#0a0612',dom,dom,k>.5?'#ffffff':dom);
+ this.rect(0,fy,W,H-fy,this.c('#08060e'));
+ this.reflect(fy,H,fy-1,'#07050c',t,.6,.8);
+ // The figure stands on the stage in front of the wall; redraw him over the floor.
+ this.beginLayer();this.person({x:X,y:fy+16,h:118,dir:Math.floor(bt.n/2)%2?-1:1,pose:'dance',beat:bt.ph,who:'milton'});this._ch_silEnd('#0a0612',dom,dom,k>.5?'#ffffff':dom);
+};
+
+// ── The rancho: a humble adobe hut with a tin roof, alone in the pampa at night. The door opens onto a whole universe.
+// o: {Z, open (0..1 door swing), pour (0..1 light pouring out), milton:{y (world ground), h, walk, sil}, thread, inside (0..1 walking into the stars)}
+F._ch_rancho=function(lt,t,o){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,Z=o.Z,fx=179,fy=135,zf=Math.min(1,(Z-1)/1.2),px=fx+(160-fx)*zf,py=fy+(100-fy)*zf;
+ const X=x=>(x-fx)*Z+px,Y=y=>(y-fy)*Z+py,wX=x=>(x-px)/Z+fx,wY=y=>(y-py)/Z+fy;
+ const R=(x,y,w,h,c)=>this.rect(X(x),Y(y),w*Z,h*Z,c),P=(pts,c)=>this.poly(pts.map(([a,b])=>[X(a),Y(b)]),c);
+ const hz=Y(124);
+ // Sky with the Milky Way and stars (slower parallax than the hut).
+ this.vgrad(0,0,W,Math.max(1,hz)+2,['#03030a','#06061a','#0c0a26','#161034','#241848']);
+ const sp=1+(Z-1)*.25;
+ for(let i=0;i<260;i++){const sx=160+(this.rand(i*3)*360-180)*sp,sy=hz-(this.rand(i*7)*hz*1.4)*sp,b=this.rand(i*11);if(sy<0||sy>hz)continue;const tw=this.rand(i+Math.floor(t*4))<.1;this.px(sx,sy,this.c(tw?'#3a3a6a':b<.08?'#ffffff':b<.3?'#c8c4f0':'#5a5890'));}
+ for(let i=0;i<500;i++){const f=this.rand(i*13),sx=160+(f*400-200)*sp,sy=(hz-20-f*70-Math.sin(f*7)*10+(this.rand(i*17)-.5)*26)*1-(Z-1)*20;if(sy<0||sy>hz)continue;if(this.d(Math.round(sx),Math.round(sy))<.5)this.px(sx,sy,this.c(this.rand(i)<.5?'#4a4078':'#2e2a58'));}
+ this.glow(160,hz,140*sp,'#2a1a4a',.4,.3);
+ // Pampa: dark grass to the horizon, a lone tree, a fence line.
+ this.rect(0,hz,W,H-hz,(x,y)=>{const wy=wY(y);return this.c(this.d(x,y)<.12+(wy-124)*.004?'#141a1c':'#0b0f12');});
+ const tx=X(282),ty=Y(124);this.rect(tx-2*Z,ty-34*Z,4*Z,34*Z,this.c('#05060a'));for(let q=0;q<9;q++){const a=-Math.PI/2+(q-4)*.32;this.line(tx,ty-26*Z,tx+Math.cos(a)*24*Z,ty-26*Z+Math.sin(a)*18*Z,this.c('#05060a'),Math.max(1,2*Z));this.ellipse(tx+Math.cos(a)*24*Z,ty-28*Z+Math.sin(a)*18*Z,9*Z,6*Z,this.c('#070910'));}
+ for(let q=0;q<8;q++){const x=X(20+q*22);this.rect(x,Y(140),2*Z,12*Z,this.c('#1a1614'));}this.rect(X(20),Y(143),160*Z,Math.max(1,Z),this.c('#2a2420'));
+ // Dirt path to the door.
+ P([[176,150],[184,150],[230,200],[130,200]],(x,y)=>this.c(this.d(x,y)<.3?'#2a2226':'#1c171c'));
+ // Roof: corrugated tin in perspective, rusty, with stones holding it down.
+ P([[90,104],[244,104],[236,84],[100,84]],(x,y)=>{const wx=wX(x),wy=wY(y),u=Math.floor(wx/3),rust=this.rand(Math.floor(wx/8)*7+Math.floor(wy/5))<.18;return this.c(rust&&this.d(x,y)<.6?'#5a3424':(u&1)?'#4a4a62':'#6a6a86');});
+ R(88,103,158,3,this.c('#2a2a3a'));R(88,103,158,1,this.c('#8a8aa8'));
+ for(const [sx,sy]of [[120,92],[160,96],[210,90]]){this.ellipse(X(sx),Y(sy),4*Z,2.5*Z,this.c('#3a3438'));this.px(X(sx)-Z,Y(sy)-Z,this.c('#6a6068'));}
+ // Whitewashed adobe walls in moonlight; the lime has flaked off in patches.
+ R(96,106,140,44,(x,y)=>{const wx=wX(x),wy=wY(y),pn=Math.sin(wx*.21+wy*.05)+Math.sin(wy*.33-wx*.07)+Math.sin(wx*.05+1.3)*1.2,patch=pn>2.05;if(patch)return this.c(this.d(x,y)<.5?'#3a2c2c':'#4e3a34');const shade=(wy-106)/44+(pn>1.45?.3:0);return this.c(this.d(x,y)<.3+shade*.5?'#383652':this.d(x,y)<.85?'#4e4c70':'#626088');});
+ R(96,106,140,3,this.c('#3a3850'));
+ for(let q=0;q<4;q++){const cx=X(110+q*36),cy=Y(120+q%2*10);this.line(cx,cy,cx+3*Z,cy+6*Z,this.c('#5a5870'));}
+ // Window with a wooden shutter.
+ R(116,116,18,15,this.c('#120e16'));R(116,116,9,15,(x,y)=>((Math.floor(wX(x))-116)%3===0)?this.c('#3a2618'):this.c('#5a3a24'));R(115,115,20,1,this.c('#3a2618'));R(115,131,20,2,this.c('#3a2618'));
+ // Doorway: the universe, the door leaf swinging inward.
+ const d0=170,d1=188,dt=120,db=150,op=o.open||0,pour=o.pour||0;
+ const gcx=X((d0+d1)/2),gcy=Y((dt+db)/2-2);
+ if(op>0){const gal=this._ch_pal(['#0a0418','#2a0a4a','#5a1a7a','#9a3aaa','#ff6ac0','#ffb0e0','#fff4ff']);
+  this._ch_fill((x,y)=>{const dx=(x-gcx)/Z,dy=(y-gcy)/Z,r=Math.hypot(dx,dy*1.3)+.01,a=Math.atan2(dy*1.3,dx);
+   const arm=Math.sin(2*a-Math.log(r)*3.2+t*1.4),neb=Math.sin(dx*.4+t*.5)*Math.sin(dy*.5-t*.3);let v=(arm*.5+.5)*Math.max(0,1-r/18)*.9+Math.max(0,1-r/6)*1.1+neb*.15;
+   if(this.rand((x*73)^(y*1931))<.05)v=Math.max(v,.85);if(r>8&&arm<-.4&&this.d(x,y)<.4)return this.c('#3af0ff');return this._ch_pick(gal,v,x,y);},X(d0),Y(dt),X(d1),Y(db));
+  const lw=(d1-d0)*Math.cos(op*1.45);P([[d0,dt],[d0+lw,dt+op*2],[d0+lw,db-op*1],[d0,db]],(x,y)=>((Math.floor(wX(x))-d0)%4===0)?this.c('#2a1a10'):this.c(op>.5?'#3a2618':'#5a3a24'));}
+ else{R(d0,dt,d1-d0,db-dt,(x,y)=>((Math.floor(wX(x))-d0)%4===0)?this.c('#3a2618'):this.c('#5a3a24'));R(d0+13,dt+15,2,2,this.c('#c8a060'));
+  if(o.leak){const a=o.leak*(.5+k*.5);for(const [x0,y0,x1,y1]of [[d0,dt,d1,dt],[d1,dt,d1,db],[d0,dt,d0,db]])this._ch_dline(X(x0),Y(y0),X(x1),Y(y1),this.c('#ffd0f0'),a);this.glow(gcx,Y(db),18*Z,'#ff6ac0',a*.6,.3);}}
+ R(d0-2,dt-2,d1-d0+4,2,this.c('#2a1a10'));R(d0-2,dt,2,db-dt,this.c('#2a1a10'));R(d1,dt,2,db-dt,this.c('#2a1a10'));
+ // Lantern by the door.
+ const lfl=.75+Math.sin(t*13)*.08+Math.sin(t*7.3)*.06;R(196,115,1,4,this.c('#2a2420'));R(194,118,5,7,this.c('#2a2420'));R(195,119,3,5,this.c('#ffcf7a'));this.glow(X(196.5),Y(121),26*Z,'#ffb04a',.5*lfl);
+ // Light pouring out of the door: rays, a carpet of light on the ground, stars streaming toward the lens.
+ if(pour>0){
+  const [ax0,ay0,ax1,ay1]=[X(d0),Y(dt),X(d1),Y(db)];
+  // Light spills on the wall around the frame and in a wedge across the ground.
+  this.glow(gcx,gcy,34*Z,'#ff6ac0',.45*pour+k*.15,.9);
+  for(let q=0;q<6;q++){const a=.35+q/5*(Math.PI-.7)+Math.sin(t*.5+q*1.7)*.06,len=(150+this.rand(q)*80)*pour*Z;this._ch_beam(gcx,Y(db)-4,gcx+Math.cos(a)*len*1.4,Y(db)-4+Math.sin(a)*len*.5,2*Z,(10+q%3*5)*Z,['#ff8fd0','#c8a8ff','#8ff4ff'][q%3],(.14+k*.06)*pour);}
+  this.glow(gcx,Y(84),70*Z,'#9a3aaa',.3*pour,.4);
+  P([[d0,db],[d1,db],[d1+34*pour,200],[d0-34*pour,200]],(x,y)=>{const f=(wY(y)-db)/50;return this.d(x,y)<.55*pour*(1-f)?this.c(f<.25&&this.d(x,y)<.3?'#fff0ff':'#ff8fd0'):0;});
+  // Nebula and stars streaming out of the door in a slow spiral.
+  for(let q=0;q<70;q++){const ph=(t*.3+this.rand(q*5))%1,a=this.rand(q*3)*Math.PI*2+ph*2.2,r=(4+ph*ph*150)*pour*Z,x=gcx+Math.cos(a)*r*1.2,y=gcy+Math.sin(a)*r*.6;if(x>ax0&&x<ax1&&y>ay0&&y<ay1)continue;
+   if(q%4===0)this.glow(x,y,4+ph*14*Z,q%8?'#b04ac0':'#3a8aff',.55*(1-ph));else{const sz=ph>.6?2:1;this.rect(x,y,sz,sz,this.c(q%3?'#ffffff':'#ffd0f0'));}}
+  for(let q=0;q<40;q++){const ph=(t*.35+this.rand(q*5))%1,a=this.rand(q*3)*Math.PI*2,r=ph*ph*260*pour,x=gcx+Math.cos(a)*r,y=gcy+Math.sin(a)*r*.7;const sz=ph>.7?2:1;this.rect(x,y,sz,sz,this.c(q%3?'#ffffff':'#ffd0f0'));}}
+ // Milton: from behind, facing the door; backlit when the universe is open.
+ if(o.milton){const m=o.milton,sx=X(m.x||179),sy=Y(m.y),h=m.h*Z;
+  this.beginLayer();this.personBack({x:sx,y:sy,h,walk:m.walk||0,who:'milton'});
+  if(m.clip){const L=this.L,b=this.box,cx0=X(d0),cx1=X(d1),cy0=Y(dt),cy1=Y(db);for(let y=Math.max(0,b[1]);y<=Math.min(H-1,b[3]);y++)for(let x=Math.max(0,b[0]);x<=Math.min(W-1,b[2]);x++)if(x<cx0||x>=cx1||y<cy0||y>=cy1)L[y*W+x]=0;}
+  if(m.sil)this._ch_silEnd('#0a0612','#ffd0f0','#ffd0f0',k>.5?'#ffffff':'#ff8fd0');else this.endLayer('#ffcf7a',1);
+  m.hand=[sx+h*.12*1.05,sy-h*.79+h*.3+h*.02];}
+ return {X,Y,gcx,gcy,door:[X(d0),Y(dt),X(d1),Y(db)]};
+};
+// ── «el universo cabe en este rancho»: push in on the lonely rancho; on the downbeat of bar 52 the door opens on the universe.
+F.shotRancho=function(lt,t){
+ const tOpen=B(52),e=t-tOpen,open=e<0?0:Film.ease(e/.35),pour=e<0?0:Math.min(1,e/.6);
+ this._ch_rancho(lt,t,{Z:1+Film.ease(lt/6)*.9,open,pour,leak:e<0?Math.max(0,(lt-.6)/1.4):0,milton:{x:166,y:168,h:26,sil:e>=0}});
+ this.rain(t,.15,0);
+};

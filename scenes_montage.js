@@ -426,3 +426,141 @@ F.shotSigns=function(lt,t){
  // Drops sliding off the bottom of the signs catch the light.
  for(let q=0;q<10;q++){const x=this.rand(q*7+i)*W,y=((t*90+this.rand(q*3)*H)%H);this.rect(x,y,1,2,C('#e8f0ff'));}
 };
+
+// Utility pole with a crossarm and insulators; returns the insulator tips for stringing cables.
+F._mt_pole=function(x,gy,top,arm=26,col='#0a0812'){const c=this.c(col),ins=this.c('#5a6a8a'),pts=[];
+ this.rect(x-2,top,4,gy-top,c);for(const [yy,w]of [[top+6,arm],[top+18,arm*.75]]){this.rect(x-w,yy,w*2,3,c);for(const s of [-1,-.5,.5,1]){const ix=x+s*w*.9;this.rect(ix-1,yy-4,2,4,ins);this.px(ix-1,yy-4,this.c('#9ab0d0'));pts.push([ix,yy-4]);}}
+ this.rect(x+3,top+30,6,9,c);return pts;};
+// The city far below a rooftop: blocks with dense lights and a glow of streets.
+F._mt_cityBelow=function(base,t,ox=0){
+ this.glow(160,base,170,'#5a2a6a',.35,.25);
+ this._mt_blocks(ox*.2,{par:1,base:base,seed:61,sp:11,w:[8,14],h:[6,30],cols:['#17153a','#1b1842'],lit:.22,win:[1,1,2,3]},t);
+ this._mt_blocks(ox*.4,{par:1,base:base+10,seed:67,sp:24,w:[16,26],h:[6,26],cols:['#0f0e26','#121130'],lit:.3,win:[2,1,4,3],pulse:false},t);
+ for(let i=0;i<40;i++){const x=((this.rand(i*9)*360-ox*.5)%360+360)%360-20,y=base+4+this.rand(i*5)*8;this.px(x,y,this.c(i%3?'#ffcf7a':'#ffffff'));}
+};
+
+// Her on a rooftop at night: power cables cross above; a faint red thread hangs among them. She notices and reaches up. Slow tilt up.
+F.shotHerRoof=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,C=h=>this.c(h),tilt=Film.ease(lt/8)*30,Y=y=>y+tilt,roof=Y(146),gy=Y(170);
+ this._mt_grad(0,roof,['#05050f','#090a1c','#11122c','#1b1840','#2a2052','#3a2a62'],-tilt,170);
+ this._mt_stars(60,71,120,0,-tilt,t);
+ this.ellipse(70,Y(26),11,11,(x,y,dx,dy)=>dx<-.4&&dy<.3?C('#c8c0e0'):C('#f0eaff'));this.glow(70,Y(26),30,'#8a7ab0',.22);
+ this._mt_cityBelow(Y(132),t,lt*3);
+ // Parapet and roof.
+ this.rect(0,roof-5,W,8,(x,y)=>C(y<roof-3?'#2e2840':(x%7===0||(y-roof)%3===0)?'#17131f':'#221c30'));this.rect(0,roof-6,W,1,C('#4e4468'));
+ this.rect(0,roof+3,W,H,(x,y)=>C(this.rand(x*7^y*131)<.05?'#2a2640':'#16142a'));
+ // Rooftop door hut and a satellite dish, rim-lit by the moon.
+ this.rect(250,Y(108),56,Y(172)-Y(108),C('#120f1c'));this.rect(246,Y(104),64,5,C('#1c1828'));this.rect(262,Y(126),18,46,C('#0a0812'));this.rect(264,Y(128),14,3,C('#ffcf7a'));this.glow(271,Y(130),14,'#ffb04a',.35);
+ this.ellipse(26,Y(150),12,7,C('#14111f'));this.line(26,Y(150),34,Y(140),C('#2a2438'));this.rect(24,Y(156),4,16,C('#0a0812'));
+ // Pole and cables crossing the sky above her.
+ const ins=this._mt_pole(222,roof+2,Y(14),30);
+ const cab=C('#05040a'),cables=[];
+ ins.forEach((p,n)=>{const ex=-20,ey=Y(-14)+n*11,sag=10+n*3;this._mt_cable(p[0],p[1],ex,ey,sag,cab,n<4?2:1);this._mt_cable(p[0],p[1],W+20,Y(40)+n*6,sag*.5,cab,n<4?2:1);cables.push([p[0],p[1],ex,ey,sag]);});
+ this._mt_cable(-20,Y(52),W+20,Y(-8),14,cab,1);
+ // The red thread hangs from the lowest cable, swaying; it brightens when she reaches.
+ const reach=Film.ease((lt-3.9)/2.2),o2=cables[6],f=.2,ax=o2[0]+(o2[2]-o2[0])*f,ay=o2[1]+(o2[3]-o2[1])*f+4*o2[4]*f*(1-f);
+ const hx=128,sway=Math.sin(t*1.3)*5+Math.sin(t*3.1)*2,tipY=ay+30+reach*10,tipX=ax+sway-reach*6;
+ const gl=.25+reach*.5+k*.15*reach;this.glow(tipX,tipY,14+reach*12,'#ff2a3a',.2+reach*.35);
+ this.redThread(ax,ay,tipX,tipY,2,t,gl,1.5);
+ // Her: standing, looking out — then reaching up for the thread.
+ const sw=.1+reach*2.35;
+ this.beginLayer();const o=this.person({x:hx,y:gy,h:88,dir:1,pose:reach>0?'reach':'stand',walk:lt*.3,who:'her',arms:[[sw,.12+.1*(1-reach)],[.1,.25]]});this.endLayer(reach>.3?'#ff8a9a':'#c8c0f0',reach>.3?1:-1);
+ if(reach>.1)this.glow(o.hands[0][0],o.hands[0][1],10,'#ff2a3a',.3*reach);
+ this.rain(t,.3,0,-tilt);
+};
+
+// Wide: Milton alone on another rooftop; black cables cross the sky between the buildings. The camera tilts up from him to the cables.
+F.shotRoofCables=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,C=h=>this.c(h),cam=180-Film.ease(lt/7.6)*180,Y=y=>y-cam;
+ this._mt_grad(0,H,['#05050f','#090a1c','#11122c','#1b1840','#2a2052','#3a2a62'],cam,360);
+ this._mt_stars(110,83,360,0,cam,t);
+ this._mt_cityBelow(Y(312),t,0);
+ // Tall neighbours at both edges.
+ const tower=(x0,x1,top,col)=>{this.rect(x0,Y(top),x1-x0,360,C(col));for(let wy=top+8;wy<360;wy+=12)for(let wx=x0+5;wx<x1-6;wx+=10){const lit=this.rand(wx*31+wy*17)<.3;this.rect(wx,Y(wy),5,7,C(lit?(this.rand(wx+wy)<.7?'#ffcf7a':'#9fe8ff'):'#0b0a18'));}this.rect(x0,Y(top),x1-x0,3,C('#2a2440'));};
+ tower(-10,58,60,'#141228');tower(268,330,96,'#16142c');
+ this.rect(58,Y(70),3,290,C('#0a0814'));
+ // His roof.
+ const roof=Y(322);this.rect(0,roof-4,W,6,C('#2e2840'));this.rect(0,roof-5,W,1,C('#4e4468'));this.rect(0,roof+2,W,H,C('#14122a'));
+ this._mt_tank(206,roof,30,30,24);
+ // Cables: strung from the towers' brackets and a pole on his roof, crossing the sky.
+ const ins=this._mt_pole(120,roof,Y(150),28),cab=C('#05040a');
+ const L=[[58,90],[58,104],[58,130],[58,170]],R=[[268,120],[268,136],[268,160],[268,206]];
+ L.forEach(([x,y],n)=>this._mt_cable(x,Y(y),R[n][0],Y(R[n][1]),18+n*6,cab,2));
+ ins.forEach((p,n)=>{this._mt_cable(p[0],p[1],-20,Y(40+n*22),14,cab,n<4?2:1);this._mt_cable(p[0],p[1],W+20,Y(30+n*16),16,cab,n<4?2:1);});
+ this._mt_cable(-20,Y(20),W+20,Y(60),30,cab,1);this._mt_cable(-20,Y(52),W+20,Y(10),26,cab,1);
+ for(const [x,y]of [[58,90],[58,130],[268,120],[268,160]]){this.rect(x-2,Y(y)-1,4,3,C('#3a4458'));}
+ // A faint red glint already hangs among the cables.
+ if(lt>5)this.redThread(30,Y(58),300,Y(44),20,t,.1*Film.ease((lt-5)/2.6),1);
+ // Milton, small, looking up; nodding on the beat.
+ this.beginLayer();this.person({x:150,y:roof+(bt.ph<.15?1:0),h:40,dir:1,pose:'stand',walk:lt*.3,who:'milton'});this.endLayer('#c8c0f0',-1);
+ this.rain(t,.35,0,cam);
+};
+
+// ───── Bridge ─────
+// Worm's-eye straight up: black cables criss-cross the sky between leaning towers; birds perch on the wires;
+// one red thread among them glows and shivers with the bass. The view slowly rotates.
+F.shotCablesSky=function(lt,t){
+ const W=this.W,H=this.H,T=this.T,bt=Film.beat(t),k=bt.kick,C=h=>this.c(h),a=.2+lt*.045,z=1+lt*.025,ca=Math.cos(a),sa=Math.sin(a);
+ const R=(x,y)=>[160+(x*ca-y*sa)*z,90+(x*sa+y*ca)*z];
+ // Sky: dark zenith, city glow toward the edges.
+ const sky=['#05050f','#090a1c','#11122c','#1b1840','#2a2052','#3a2a62'].map(C);
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const r=1.6+Math.hypot(x-160,(y-90)*1.3)/190*4;const q=Math.floor(r+this.d(x,y)*.9);T[y*W+x]=sky[q>5?5:q];}
+ for(let i=0;i<70;i++){const [x,y]=R((this.rand(i*3)-.5)*360,(this.rand(i*7)-.5)*300);if(this.rand(i+Math.floor(t*3))<.9)this.px(x,y,C(this.rand(i*11)<.2?'#e8e4ff':'#6a66a0'));}
+ // Towers leaning in from the corners (their tops converge on the zenith), windows in rows.
+ const ia=1/z,inv=(x,y)=>{const dx=(x-160)*ia,dy=(y-90)*ia;return [dx*ca+dy*sa,-dx*sa+dy*ca];};
+ const tw=(pts,col,seed)=>{this.poly(pts.map(([x,y])=>R(x,y)),(x,y)=>{const [wx,wy]=inv(x,y),gx=Math.floor(wx/9),gy=Math.floor(wy/9);
+  if(((wx-gx*9)<4)&&((wy-gy*9)<4)){const h=this.rand(gx*131+gy*17+seed);if(h<.22)return C(h<.15?'#ffcf7a':'#9fe8ff');if(h<.5)return C('#1a1834');}return C(col);});
+  const P=pts.map(([x,y])=>R(x,y));this.line(P[1][0],P[1][1],P[2][0],P[2][1],C('#3a2a5a'),1);};
+ tw([[-300,-220],[-56,-220],[-66,-48],[-300,-70]],'#0a0918',1);tw([[300,-220],[62,-220],[74,-56],[300,-44]],'#0c0a1c',2);
+ tw([[-300,220],[-48,220],[-62,62],[-300,36]],'#0a0918',3);tw([[300,220],[56,220],[48,76],[300,64]],'#0c0a1c',4);
+ // Two utility poles seen from below: shafts converge, crossarms with insulators.
+ const ink=C('#030208'),insC=C('#8a9aba');
+ for(const [px,py,ex,ey]of [[-170,170,-30,30],[170,-170,34,-34]]){const [a1,b1]=R(px,py),[a2,b2]=R(ex,ey);this.line(a1,b1,a2,b2,ink,9);
+  const l=Math.hypot(a2-a1,b2-b1),ux=-(b2-b1)/l,uy=(a2-a1)/l;this.line(a2-ux*30,b2-uy*30,a2+ux*30,b2+uy*30,ink,4);
+  for(const q of [-26,-12,12,26]){const ix=a2+ux*q,iy=b2+uy*q;this.rect(ix-2,iy-2,5,5,insC);this.px(ix-1,iy-2,C('#d8e4ff'));}}
+ // Cables: rotated together; birds sit on some.
+ const L=[[-300,-58,300,-18,3],[-300,-34,300,8,3],[-300,40,300,22,2],[-300,64,300,52,2],[-60,-260,-20,260,2],[30,-260,72,260,2],[-300,-120,300,110,1],[-300,140,300,-90,1],[-300,-90,300,-70,1]];
+ const bird=(x,y,dx,dy,fl)=>{let nx=-dy,ny=dx;if(ny>0){nx=-nx;ny=-ny;}const B=(u,v)=>[x+(dx*u+nx*v)*1.8,y+(dy*u+ny*v)*1.8];
+  for(const [u,v]of [[0,1],[1,1],[-1,1],[-2,1],[0,2],[1,2],[-1,2],[2,2],[0,3],[1,3],[-1,3],[2,3],[2,4],[3,4],[-3,1],[-4,0],[0,0]]){const [p,q]=B(u,v);this.rect(p-1,q-1,2,2,ink);}
+  for(const [u,v]of [[-1,4],[0,4],[1,4],[3,5],[2,5]]){const [p,q]=B(u,v);this.rect(p-.5,q-.5,1,1,C('#6a5a9a'));}
+  const [ex2,ey2]=B(fl?3:2,4);this.px(ex2,ey2,C('#ffcf7a'));};
+ L.forEach(([x0,y0,x1,y1,w],n)=>{const [a1,b1]=R(x0,y0),[a2,b2]=R(x1,y1);this.line(a1,b1,a2,b2,ink,w);
+  if(n<4&&n!==1){const l=Math.hypot(a2-a1,b2-b1),dx=(a2-a1)/l,dy=(b2-b1)/l;for(let m=0;m<3;m++){const f=.22+this.rand(n*7+m)*.56;bird(a1+(a2-a1)*f,b1+(b2-b1)*f,dx,dy,(bt.n+m)%4===0);}}});
+ // The red thread: a standing wave that jumps with each kick.
+ const [r1,s1]=R(-300,-6),[r2,s2]=R(300,36),len=Math.hypot(r2-r1,s2-s1),nx=-(s2-s1)/len,ny=(r2-r1)/len,amp=1+k*6;
+ for(let i=0;i<=len;i++){const f=i/len,w=Math.sin(f*Math.PI*5)*Math.sin(t*38)*amp*Math.sin(f*Math.PI),x=r1+(r2-r1)*f+nx*w,y=s1+(s2-s1)*f+ny*w;
+  if(i%2===0)for(let q=-4;q<=4;q++)if(q&&this.d(Math.round(x+nx*q),Math.round(y+ny*q))<(.35+k*.3)*(1-Math.abs(q)/5))this.px(x+nx*q,y+ny*q,C('#a0142a'));
+  this.px(x,y,C(k>.5?'#ffd0d0':'#ff2a3a'));if(k>.3)this.px(x+nx,y+ny,C('#ff6a6a'));}
+ this.rain(t,.25,0,0,0);
+};
+
+// Close-up: Milton's hand, the red thread knotted on his pinky; it tugs on the beat and he slowly closes his fist.
+F.shotPinky=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,P=Film.CAST.milton,C=h=>this.c(P[h]||h),cl=Film.ease((lt-1)/3.8)*.9,tug=k*(bt.n%2?1:.6);
+ this._mt_grad(0,H,['#05040e','#0a0a20','#141232','#1c1440']);
+ for(let i=0;i<9;i++){const x=(this.rand(i*7)*380-lt*(4+i))%380-30,y=this.rand(i*5)*170,r=14+this.rand(i*3)*20;this.glow(x,y,r,['#ff3fa4','#3af0ff','#ffb04a','#a03aff'][i%4],.45);}
+ const ox=146,oy=104+Math.round(cl*6);
+ this.beginLayer();
+ // Sleeve and cuff from the bottom of frame.
+ this.quad(ox+6,oy+70,ox+30,H+40,62,80,C('sleeve'));this.quad(ox+2,oy+58,ox+10,oy+80,54,60,C('cuff'));this.rect(ox-24,oy+64,52,2,C('jacketShade'));
+ // Back of the hand.
+ this.poly([[ox-30,oy+58],[ox-38,oy+10],[ox-34,oy-8],[ox+36,oy-8+4],[ox+40,oy+20],[ox+30,oy+60]],(x,y)=>x>ox+22&&this.d(x,y)<.5?C('skinShade'):C('skin'));
+ for(let q=0;q<4;q++)this.line(ox-20+q*15,oy+6,ox-12+q*11,oy+44,C('skinShade'));
+ // Fingers: index → pinky. They shorten and darken as they curl away.
+ const F2=[[-28,48,15],[-10,54,16],[8,50,15],[26,40,12]],tips=[];
+ F2.forEach(([fx,L,w],n)=>{const bx=ox+fx+(n===3?tug*2:0),by=oy-6+(n===3?6:0),len=L*(1-cl*.78)+(n===3?-tug*2:0),tx=bx+(n-1.5)*3*(1-cl)+(n===3?tug*3:0),ty=by-len;
+  this.quad(bx,by,tx,ty,w,w-2,cl>.55?C('skinShade'):C('skin'));
+  if(cl<.6){this.rect(tx-w/2+3,ty-w/2+2,w-6,Math.max(2,6-cl*6),C('#f8dcc8'));this.rect(tx-w/2+3,ty-w/2+2,w-6,1,C('#ffffff'));}
+  const kx=bx,ky=by-len*.5;this.line(kx-w/2+3,ky,kx+w/2-3,ky,C('skinDark'));
+  this.ellipse(bx,by+2,w/2,4,C(cl>.4?'#ffe0cc':'skin'));tips.push([bx,by,tx,ty,w]);});
+ // Thumb swings in over the fist.
+ const thx=ox-44+cl*30,thy=oy+4+cl*14;this.quad(ox-28,oy+42,thx,thy,17,14,C('skin'));this.rect(thx-5,thy-6,9,5,C('#f8dcc8'));
+ this.endLayer(k>.5?'#ffd0d0':'#ff8a9a',1);
+ // Knot on the pinky, and the thread running off frame, pulled taut on each beat.
+ const [bx,by,tx,ty,w]=tips[3],kx=bx+(tx-bx)*.3,ky=by+(ty-by)*.3;
+ this.redThread(kx+w/2,ky,W+20,18,(1-tug)*22+6,t,.5+tug*.4,1+(1-tug));
+ this.rect(kx-w/2,ky-1,w+1,3,C('#ff2a3a'));this.rect(kx-w/2,ky-1,w+1,1,C('#ff9a9a'));
+ this.ellipse(kx+w/2+2,ky-3,3,2,C('#ff2a3a'));this.ellipse(kx+w/2+2,ky+3,3,2,C('#d01a2a'));this.rect(kx+w/2,ky,3,2,C('#ff9a9a'));
+ this.glow(kx+w/2,ky,20,'#ff2a3a',.3+tug*.3);
+ for(let i=0;i<16;i++){const x=this.rand(i*7)*W,y=(this.rand(i*3)*H+t*28*(1+i%3))%H;this.px(x,y,C('#e8fbff'));this.px(x,y+1,C('#8fb8c8'));}
+};

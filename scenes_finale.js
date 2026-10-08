@@ -524,3 +524,114 @@ F.shotBeanieNod=function(lt,t){
   const [rx,ry]=P(86,-w*.6);this.glow(rx,ry,24,'#3af0ff',.3+k*.35);}
  this.endLayer(k>.5?'#ffffff':lcore,-1);
 };
+
+// ── Tracking: she runs right→left along the riverside toward the iron bridge; the red thread on her pinky pulls ahead.
+F.shotHerBridgeRun=function(lt,t){
+ const W=this.W,H=this.H,k=Film.beat(t).kick,h=80,v=.27*h*4,cam=-v*lt,G=160,X=196;
+ this.vgrad(0,0,W,112,['#05050f','#0a0a22','#141236','#22184a','#30205a']);
+ this._finMoon(262,30,12);
+ this._finFarCity(cam*.6,112,t,k,.1,60,34);
+ // The bridge across the river, its near end sliding toward her.
+ const bc=cam*.18,deck=102,top=52;
+ this._finBridgeBack(bc,deck,top,k,-600,150,true);this._finBridgeFront(bc,deck,top,-600,150);
+ {const ex=150-bc;this.rect(ex-6,deck,14,14,this.c('#1c1830'));this.rect(ex-6,deck,14,1,this.c('#4a4068'));}
+ for(let i=0;i<4;i++){const px=150-bc-40-i*110;this.rect(px-5,deck+6,10,12,this.c('#16122a'));this.rect(px-5,deck+6,1,12,this.c('#3a3456'));}
+ this.rect(0,112,W,34,this.c('#0a0a1e'));
+ this.reflect(113,146,112,'#07071a',t,2,.6);
+ // Promenade railing, then the wet flagstones she runs on.
+ const rp=cam*.85,rail=this.c('#2a2440'),hl=this.c('#5a4f7a');
+ this.rect(0,126,W,2,rail);this.rect(0,126,W,1,hl);this.rect(0,138,W,2,rail);
+ for(let i=-1;i<W/22+2;i++){const x=Math.round(i*22-(((-rp)%22)+22)%22);this.rect(x,124,2,24,rail);this.px(x,124,hl);}
+ this.rect(0,146,W,H-146,(x,y)=>{const u=Math.round(x+(-cam)),seam=((u+Math.floor((y-146)/7)*9)%26+26)%26===0||(y-146)%7===0;return this.c(seam?'#141022':this.d(x,y)<.12?'#2a2440':'#1e1a32');});
+ this.rect(0,146,W,1,this.c('#4a4068'));
+ // Her.
+ this.beginLayer();const p=this.person({x:X,y:G,h,dir:-1,walk:((t-Film.BEAT0)/Film.P)/2,who:'her',pose:'run'});this.endLayer('#ffb04a',1);
+ const hd=p.hands[0];
+ this._finThreadLine(hd[0],hd[1],-6,deck-6,t,.7,1.5);this.glow(hd[0],hd[1],8,'#ff3a4a',.5);
+ this.reflect(G+1,H,G,'#16122a',t,1.2,.4);
+ // Lamp posts flashing past in the foreground.
+ for(let i=-1;i<3;i++){const x=Math.round(i*190-(((-cam*1.35)%190)+190)%190)+60;this.rect(x,0,6,H,this.c('#0a0812'));this.rect(x+1,0,1,H,this.c('#3a2a40'));this.glow(x+3,20,30,'#ffb04a',.35);}
+ this.rain(t,.8,cam);
+};
+
+// A rooftop block in side view: parapet, facade with windows dropping out of frame.
+F._finRoof=function(x0,x1,y,seed){
+ const W=this.W,H=this.H,a=Math.max(-5,x0),b=Math.min(W+5,x1);if(b<=a)return;
+ this.rect(a,y,b-a,H-y,(x,yy)=>this.c(((x-x0)%30+30)%30<2?'#0e0c1c':'#16132a'));
+ for(let wy=y+14;wy<H;wy+=14)for(let wx=x0+6;wx<x1-6;wx+=15){if(wx+8<a||wx>b)continue;const lit=this.rand(seed*97+wx*7+wy*13)<.4;this.rect(wx,wy,8,9,this.c(lit?(this.rand(wx+wy*3+seed)<.6?'#ffcf7a':'#9fe8ff'):'#0b0a18'));if(lit)this.rect(wx,wy+7,8,2,this.c('#c98a4a'));}
+ this.rect(a,y-5,b-a,5,this.c('#2a2440'));this.rect(a,y-5,b-a,1,this.c('#5e5384'));this.rect(a,y,b-a,1,this.c('#0a0812'));
+};
+
+// ── Side shot: Milton sprints off the rooftop stage and leaps the gap to the next roof — the street lights far below —
+// a big slow-motion arc with the thread taut from his pinky; he touches down on the downbeat of bar 144 (the cut).
+F.shotLeap=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,h=56,T0=1.0,T1=B(144)-B(142);
+ const u=Math.max(0,Math.min(1,(lt-T0)/(T1-T0))),fly=lt>=T0,yL=120,yR=130,edgeL=96,edgeR=236;
+ const mxW=fly?edgeL-4+(268-edgeL+4)*u:edgeL-4-(T0-lt)*62,myW=fly?yL+(yR-yL)*u-4*62*u*(1-u):yL;
+ const cam=(mxW-160)*.35,camY=fly?-Math.sin(u*Math.PI)*14:0;
+ const tR=fly?B(142)+T0+(lt-T0)*.12:t; // slow motion: the rain nearly hangs in the air
+ this.vgrad(0,0,W,H,['#05050f','#0a0a20','#141232','#221a48','#3a2462']);
+ this._finMoon(70-cam*.05,34-camY*.2,12);
+ // The city far below: a carpet of lights and street grids, hazy.
+ const cy0=Math.round(112-camY*.3);
+ this.vgrad(0,cy0,W,H-cy0,['#1a1238','#140f2c','#0d0b20']);
+ for(let i=0;i<480;i++){const x=((this.rand(i*7)*W*1.3-cam*.25)%(W+40)+W+40)%(W+40)-20,y=cy0+3+Math.pow(this.rand(i*13),.7)*(H-cy0);this.px(x,y,this.c(['#ffcf7a','#9fe8ff','#ff8fd0','#ffe9b0'][i%4]));}
+ for(let r=0;r<4;r++){const y=cy0+10+r*16+r*r*3;for(let x=0;x<W;x+=2)if(((x+Math.floor(t*30*(r&1?1:-1))+r*7)%9)<2)this.px(x,y,this.c(r&1?'#ff4a5a':'#ffe9b0'));}
+ this.glow(160,cy0+30,140,'#4a2a6a',.3,.35);
+ // Mid skyline with tops below the roofline (it is a long way down).
+ this._finSkyline(cam*.5,cy0+16,t,0,4,['#120f28','#151330','#262248']);
+ // Looking down the canyon between the two buildings: the street far below with traffic.
+ {const gx0=edgeL-cam,gx1=edgeR-cam,sy=H-14;this.rect(gx0,sy-30,gx1-gx0,44,(x,y)=>this.d(x,y)<(y-sy+30)/50?this.c('#0a0816'):0);
+  for(let i=0;i<10;i++){const x=gx0+((i*37+t*(i&1?40:-55))%(gx1-gx0)+(gx1-gx0))%(gx1-gx0);this.rect(x,sy+(i&1?3:7),2,1,this.c(i&1?'#ff4a5a':'#fff1c2'));}}
+ // The two roofs: stage edge with a speaker and the truss end on the left, a water tank on the right.
+ this._finRoof(-60-cam,edgeL-cam,yL-camY,3);this._finRoof(edgeR-cam,420-cam,yR-camY,7);
+ this._finSpeaker(10-cam,yL-5-camY-40,30,40,k);this.rect(48-cam,yL-5-camY-110,4,110,this.c('#3a3654'));this._finTruss(-20-cam,52-cam,yL-5-camY-112,8,0);
+ {const wx=300-cam,wy=yR-5-camY;this.rect(wx-14,wy-44,28,22,this.c('#1c1832'));this.poly([[wx-16,wy-44],[wx,wy-54],[wx+16,wy-44]],this.c('#1c1832'));for(const lx of [-12,-4,4,12])this.rect(wx+lx,wy-22,2,22,this.c('#1c1832'));}
+ // Milton: running, then frozen mid-leap — front leg reaching, arm out toward her.
+ const X=mxW-cam,G=myW-camY;
+ this.beginLayer();
+ const p=fly?this.person({x:X,y:G,h,dir:1,walk:.25,who:'milton',pose:'run',arms:[[1.95,.15],[-1.2,.5]]}):this.person({x:X,y:G,h,dir:1,walk:((t-Film.BEAT0)/Film.P)/2,who:'milton',pose:'run'});
+ this.endLayer('#ff8fd0',-1);
+ const hd=p.hands[0];this._finThreadLine(hd[0],hd[1],W+8,hd[1]-24-u*10,t,.8,fly?.3:1.2);this.glow(hd[0],hd[1],7,'#ff3a4a',.55);
+ // Motion trail behind him in the slow-mo.
+ if(fly)for(let j=1;j<6;j++){const uu=Math.max(0,u-j*.025),tx=edgeL-4+(268-edgeL+4)*uu-cam,ty=yL+(yR-yL)*uu-4*62*uu*(1-uu)-camY-h*.5;this.glow(tx,ty,6,'#ff3fa4',.35-j*.05);}
+ this.rain(tR,.6,cam);
+};
+
+// One half of the split screen, drawn full-frame as if the runner runs right; the bridge's end comes to meet the runner.
+F._finRunHalf=function(lt,t,who,h){
+ const W=this.W,H=this.H,k=Film.beat(t).kick,G=142,X=70,v=.27*h*4,cam=v*lt,Xb=X+v*4.6,deck=G,top=G-74,bS=cam;
+ this.vgrad(0,0,W,G,['#05050f','#0a0a22','#141236','#22184a','#30205a']);
+ for(let i=0;i<40;i++){const x=Math.floor(this.rand(i*7+1)*W),y=Math.floor(this.rand(i*3+2)*60);this.px(x,y,this.c(this.rand(i)<.3?'#ffffff':'#8a8ac0'));}
+ // The moon sits on the divider: each half holds one side of it.
+ this._finMoon(160,30,13);
+ this._finFarCity(cam*.6,G-16,t,k,.1,G-80,40);
+ // Before the bridge: street blocks with signs; after: open river under the deck.
+ for(let i=-1;i<12;i++){const bx=i*58-((cam*.55)%58),wx=bx+cam*.55;if(wx>Xb*.55+40)continue;const tp=40+this.rand(i*5+(who==='her'?9:0)+Math.floor(cam*.55/58)*7)*40;
+  this.rect(bx,tp,52,G-tp,this.c(i&1?'#17152e':'#1b1834'));for(let wy=tp+6;wy<G-8;wy+=9)for(let wx2=bx+5;wx2<bx+48;wx2+=9)if(this.rand(Math.round(wx)*7+wy*13+wx2*3+(who==='her'?5:0))<.35)this.rect(wx2,wy,4,5,this.c(this.rand(wy+wx2*3)<.6?'#ffcf7a':'#9fe8ff'));
+  if(this.rand(Math.round(wx)*3)<.4){const nc=['#ff3fa4','#3af0ff','#ffb04a'][((i%3)+3)%3];this.rect(bx+8,tp+10,36,4,this.c(nc));this.glow(bx+26,tp+12,16,nc,.4+k*.3,.5);}}
+ this._finBridgeBack(bS,deck,top,k,Xb,1e5);
+ // Ground: sidewalk before the bridge, deck over the river after it.
+ const bx0=Xb-bS;
+ this.rect(0,G,Math.max(0,Math.min(W,bx0)),H-G,(x,y)=>this.c(y===G?'#4a4068':((x+Math.round(cam))%16===0)?'#141022':this.d(x,y)<.15?'#2a2440':'#1e1a32'));
+ if(bx0<W){const a=Math.max(0,bx0);this.rect(a,G+10,W-a,H-G-10,this.c('#0a0a1e'));}
+ // The runner and the thread, pulled toward the divider.
+ this.beginLayer();const p=this.person({x:X,y:G,h,dir:1,walk:((t-Film.BEAT0)/Film.P)/2+(who==='her'?.5:0),who,pose:'run'});this.endLayer(who==='her'?'#ffb04a':'#ff8fd0',-1);
+ const hd=p.hands[0];this._finThreadLine(hd[0],hd[1],162,100,t,.7,1.4);this.glow(hd[0],hd[1],7,'#ff3a4a',.5);
+ this._finBridgeFront(bS,deck,top,Xb,1e5);
+ if(bx0<W){const a=Math.max(0,Math.round(bx0));this.reflect(G+10,H,G+9,'#07071a',t,2,.6);if(a>0)this.rect(0,G+1,a,H-G-1,(x,y)=>this.c(y===G+1?'#4a4068':((x+Math.round(cam))%16===0)?'#141022':this.d(x,y)<.15?'#2a2440':'#1e1a32'));}
+ this.rain(t,.6,cam);
+};
+
+// ── Split screen: him running left→right, her right→left; over eight seconds both halves arrive at the two ends of the
+// same iron bridge (the moon straddles the divider, the thread crosses it).
+F.shotConverge=function(lt,t){
+ const W=this.W,H=this.H,buf=this.buf,k=Film.beat(t).kick;
+ this._finRunHalf(lt,t,'milton',62);
+ const keep=new Uint32Array(W*H);keep.set(buf);
+ this._finRunHalf(lt,t,'her',60);
+ for(let y=0;y<H;y++){const r=y*W;for(let x=0;x<W/2;x++)buf[r+W-1-x]=buf[r+x];for(let x=0;x<W/2;x++)buf[r+x]=keep[r+x];}
+ // Divider.
+ this.rect(158,0,4,H,this.c('#05040a'));this.rect(159,0,2,H,(x,y)=>this.d(x,y)<.25+k*.3?this.c('#ff3fa4'):this.c('#1a1028'));
+ this._finThreadLine(150,100,170,100,t,.9,0);
+};

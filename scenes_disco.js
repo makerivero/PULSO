@@ -355,7 +355,7 @@ F.shotSax=function(lt,t,s){
  const path=this._dc_curve([[106,62],[118,58],[131,60],[141,68],[147,82],[150,100],[152,118],[155,134],[163,146],[176,148],[187,141],[193,127],[197,110],[201,94],[205,82]],.8);
  const wid=u=>u<.18?3+u/.18*3:u<.7?6+(u-.18)/.52*6:u<.9?12+(u-.7)*10:14+((u-.9)/.1)**2*16;
  const c1=this.c('#3a3670'),c2=this.c('#6a64a8'),c3=this.c('#b8b0e8'),c4=this.c('#f4f0ff'),cy2=this.c('#8ff4ff'),pk=this.c('#ffb0e0');
- for(const [x,y,nx,ny,u]of path){const w=wid(u);for(let o=-w/2;o<=w/2;o+=1){const e=1-(2*o/w)**2,sw=.5+.5*Math.sin(u*38-t*2.2+o*.5+Math.sin(u*9+t)*1.5),f=.42*e*(.45+sw*.9),qx=x+ox+nx*o,qy=y+oy+ny*o;if(this.d(Math.round(qx),Math.round(qy))<f)this.px(qx,qy,f>.45?c3:f>.25?c2:c1);}}
+ for(const [x,y,nx,ny,u]of path){const w=wid(u);for(let o=-w/2;o<=w/2;o+=1){const e=1-(2*o/w)**2,sw=.5+.5*Math.sin(u*38-t*2.2+o*.5+Math.sin(u*9+t)*1.5),f=.62*e*(.45+sw*.9),qx=x+ox+nx*o,qy=y+oy+ny*o;if(this.d(Math.round(qx),Math.round(qy))<f)this.px(qx,qy,f>.45?c3:f>.25?c2:c1);}}
  for(let j=0;j<6;j++)for(let i=0;i<path.length;i++){const [x,y,nx,ny,u]=path[i],w=wid(u),o=w/2*.85*Math.sin(u*14+j*1.9+t*(.9+j*.15)),b=.5+.5*Math.sin(u*7-t*1.6+j*2.3);if(b<.35)continue;this.px(x+ox+nx*o,y+oy+ny*o,j===0?cy2:j===5?pk:b>.8?c4:b>.6?c3:c2);}
  for(const u of [.3,.37,.44,.51,.58,.65]){const p=path[Math.floor(u*(path.length-1))],w=wid(u),cx=p[0]+ox-p[2]*w*.35,cy=p[1]+oy-p[3]*w*.35;for(let a=0;a<8;a++)if(this.d(a,Math.floor(t*8))<.7)this.px(cx+Math.cos(a/8*Math.PI*2+t)*2.2,cy+Math.sin(a/8*Math.PI*2+t)*2.2,c3);}
  {const e=path[path.length-1],tx=e[3],ty=-e[2];for(let a=0;a<40;a++){const an=a/40*Math.PI*2,r=16+Math.sin(an*3+t*2)*1.5,qx=e[0]+ox+e[2]*Math.cos(an)*r+tx*Math.sin(an)*r*.3,qy=e[1]+oy+e[3]*Math.cos(an)*r+ty*Math.sin(an)*r*.3;this.px(qx,qy,a%3?c3:c4);}}
@@ -372,4 +372,200 @@ F.shotSax=function(lt,t,s){
    if(this.d(x,y)<dn*(1-diss*.5)){const lv=f<-.05?(nz>.6?3:2):1;this.px(x,y,cc[Math.min(3,lv+(warm>.6&&nz>.7?1:0))]);}}
   for(let i=0;i<24*em*(1-diss);i++){const u=i/24,x=end[0]+ox+(hx-end[0]-ox)*u+Math.sin(u*9+t*3)*3,y=end[1]+oy+(hy-end[1]-oy)*u;if(this.d(Math.round(x),Math.round(y))<.6)this.px(x,y,c2);}
   if(diss>0)for(let i=0;i<50;i++){const a=this.rand(i)*Math.PI*2,r=R*(.6+diss*1.8*this.rand(i+9)),x=hx+Math.cos(a)*r+diss*10,y=hy+Math.sin(a)*r*.8-diss*14*this.rand(i+3);if(this.d(Math.round(x),Math.round(y))<(1-diss)*.9)this.px(x,y,cc[1+(i%2)]);}}
+};
+
+// ── Side tracking: Milton bursts out of the disco and runs; foreground posts whip past; the cadence doubles halfway.
+F.shotRunOut=function(lt,t,s){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,P=Film.P,h=56,gy=150,tS=8*P,v1=2*.27*h/P,v2=v1*2;
+ const xM=lt<tS?v1*lt:v1*tS+v2*(lt-tS),phase=lt<tS?walkAt(t):walkAt(s.t0+tS)+(lt-tS)/P,sx=52+92*Film.ease(lt/2.2)+14*Film.ease((lt-4)/3),cam=xM-sx+52,spd=lt<tS?v1:v2;
+ this.vgrad(0,0,W,gy,['#04040c','#08081c','#10102c','#1a163e','#281e4e']);this.glow(160,gy,150,'#4a2260',.4,.4);
+ // Far skyline and mid blocks with neon, at their own speeds.
+ for(const [p,top,col,ww,seed]of [[.12,[40,80],'#100f24',1,1],[.4,[56,96],'#16142e',2,2]]){let x=-40-((cam*p)%2000),i=0;const base=Math.floor(cam*p/2000)*97;
+  for(;x<W+40;i++){const id=i+base*0,bw=18+this.rand(id*7+seed)*26,tp=top[0]+this.rand(id*3+seed)*(top[1]-top[0]);this.rect(x,tp,bw+1,gy-tp,this.c(col));
+   for(let wy=tp+4;wy<gy-6;wy+=ww*3)for(let wx=x+2;wx<x+bw-2;wx+=ww*3)if(this.rand(Math.round(wx+cam*p)*13+wy*7+seed)<.18)this.rect(wx,wy,ww,ww,this.c(this.rand(wx+wy)<.6?'#ffcf7a':'#9fe8ff'));
+   if(p>.3&&i%3===1){const cc=['#ff3fa4','#3af0ff','#ffb04a'][i%3===1?(i>>1)%3:0];this.rect(x+bw/2-4,tp+8,8,30,this.c('#0e0b1a'));this.glow(x+bw/2,tp+23,14,cc,.45+k*.2);for(let q=0;q<4;q++)this.rect(x+bw/2-2,tp+11+q*7,4,4,this.c(cc));}
+   x+=bw+2+this.rand(id*5+seed)*8;}}
+ // Street facades: first the disco (bricks, door bursting open), then shopfronts.
+ const fx=x=>x-cam;
+ this.rect(fx(-40),70,200,gy-70,(x,y)=>this.c(((y%6===0)||((x+cam+((y/6|0)&1)*7)%14<1))?'#120a16':'#2a1626'));
+ this.glow(fx(60),76,60,'#ff3fa4',.3+k*.1,.4);this.rect(fx(10),70,100,10,this.c('#0c0912'));this._dc_neon('DISCO',fx(16),70,4,'#ff3fa4','#ffd0ea');
+ const dop=Film.ease(lt/.15);this.rect(fx(36),102,30,48,(x,y)=>{const f=.7+.3*k+this.d(x,y)*.3;return this.c(f>.95?'#ffd0ea':f>.75?'#ff5fb4':'#c02a8a');});
+ this.rect(fx(36)+30*dop*.8,102,Math.max(3,30*(1-dop)),48,this.c('#2a0e2a'));if(lt<1.2)this.poly([[fx(36),gy],[fx(66),gy],[fx(110),gy+12],[fx(10),gy+12]],(x,y)=>this.d(x,y)<.4*(1-lt/1.2)?this.c('#ff5fb4'):0);
+ for(let i=0;i<40;i++){const wx=200+i*96,x=fx(wx);if(x>W+10)break;if(x<-100)continue;const bw=84,tp=78+this.rand(i)*22;this.rect(x,tp,bw,gy-tp,this.c(i&1?'#1c1a36':'#201d3a'));this.rect(x,tp,bw,2,this.c('#2c2848'));
+  for(let wy=tp+6;wy<gy-30;wy+=13)for(let q=0;q<5;q++)if(this.rand(i*31+q+wy)<.4)this.rect(x+6+q*16,wy,8,8,this.c(this.rand(i+q*3+wy)<.7?'#ffcf7a':'#5fd8ff'));
+  const aw=['#ff3fa4','#3af0ff','#ffb04a'][i%3];this.rect(x+6,gy-26,bw-12,4,(a,b)=>((a+cam)>>2)&1?this.c(aw):this.c('#1a1426'));this.rect(x+8,gy-22,bw-16,20,this.c('#3a2a30'));this.vgrad(x+9,gy-21,bw-18,18,['#ffe0a0','#e0a058','#a8683a']);this.glow(x+bw/2,gy-6,30,aw,.25);}
+ this.rect(0,gy,W,6,(i,j)=>this.c(this.d(i,j)<.15?'#34345a':'#26263e'));this.rect(0,gy+6,W,2,this.c('#4a4a6a'));this.rect(0,gy+8,W,H-gy-8,this.c('#0c0c1e'));
+ // Milton: out of the doorway, growing to full size, steps on the beat (then on eighths).
+ const em=Film.ease(lt/.35),mh=h*(.86+.14*em),mg=gy+2*em;this.beginLayer();this.person({x:sx,y:mg,h:mh,dir:1,walk:phase,who:'milton',pose:'run'});this.endLayer(lt<.8?'#ff9ad4':'#ffb04a',-1);
+ const step=lt<tS?P:P/2,ls=Math.floor((lt<tS?lt:lt-tS)/step),tl=(lt<tS?0:tS)+ls*step,age=lt-tl;
+ if(age<.35&&lt>.3){const lx=sx+.27*h-(xM-(tl<tS?v1*tl:v1*tS+v2*(tl-tS)));for(let i=0;i<10;i++){const a=Math.PI*(.15+.7*this.rand(i+ls*13)),sp=30+this.rand(i*3+ls)*50;this.px(lx+Math.cos(a)*sp*age*(i&1?1:-1),gy+2-Math.sin(a)*sp*age+120*age*age,this.c('#c8d8ff'));}}
+ this.reflect(gy+8,H,gy+7,'#0a0a1c',t,2,.7);
+ // Foreground posts, meters and signs rush by with a smear.
+ for(let i=0;i<30;i++){const wx=150+i*130+this.rand(i)*60,x=wx-cam*1.9;if(x<-30||x>W+30)continue;const kind=i%3,sm=Math.min(30,spd*.12),ink=this.c('#07060c');
+  for(let g=sm;g>=0;g-=3){const col=g?((this.d(Math.round(x+g),g)<.4)?ink:0):ink;if(!col)continue;
+   if(kind===0){this.rect(x+g,40,5,H-40,col);this.rect(x+g-6,40,18,4,col);}else if(kind===1){this.rect(x+g,128,4,H-128,col);this.rect(x+g-3,116,10,14,col);}else{this.rect(x+g,90,3,H-90,col);this.rect(x+g-10,90,24,14,col);}}
+  this.rect(x,kind===0?40:kind===1?116:90,1,H,this.c('#ff5fb4'));if(kind===2){this.rect(x-9,91,22,12,this.c('#1a3a6a'));this.text('ALTO',x-7,94,this.c('#e8f0ff'),1,1);}}
+ this.rain(t,.9,cam*.6,0,.18+Math.min(.5,spd*.003));
+};
+
+// ── Portrait: sweat, panting on the beat, breath in the cold; a neon sign flickers on his face.
+F.shotSweat=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,heave=Math.round(Math.sin(bt.ph*Math.PI)*2),ox=60+Math.sin(lt*1.7)*2,oy=-8+heave+Math.cos(lt*2.3)*1.5,S=150;
+ const fr=Math.floor(t*14),flick=this.rand(fr*13)<.18,pinkOn=(bt.n&2)===0,neon=flick?null:pinkOn?'#ff3fa4':'#3af0ff';
+ this.vgrad(0,0,W,H,['#04040c','#0a0a1e','#120f2c','#1a1434']);
+ for(const [bx,by,r,col]of [[276,40,40,'#ff3fa4'],[300,140,34,'#3af0ff'],[14,30,30,'#ffb04a'],[30,150,26,'#3af0ff'],[240,100,18,'#ffe14a']])this.glow(bx-lt*5,by,r,col,col===neon?.75:.38);
+ if(neon){this.rect(296-lt*5,0,6,H,(x,y)=>this.d(x,y)<.35?this.c(neon):0);this.glow(299-lt*5,90,44,neon,.4);}
+ this.rain(t,.55,lt*14);
+ this.beginLayer();
+ this.portrait({x:ox,y:oy,S,who:'milton',dir:1,open:bt.ph<.45,sweat:lt*.6,kick:k,rimFront:neon?(pinkOn?'#ffb0e0':'#b0f8ff'):'#6a6a8a'});
+ if(neon){const nc=this.c(neon),nr=nc&255,ng=(nc>>8)&255,nb=(nc>>16)&255;this._dc_tint((x,y,r,g,b)=>{const f=Math.max(0,(x-ox-S*.5)/(S*.45));return this.d(x,y)<f*.4?this._dc_rgb((r+nr)>>1,(g+ng)>>1,(b+nb)>>1):0;});}
+ this.endLayer(null);
+ // Breath vapor out of the mouth on every beat.
+ const mx=ox+.86*S,my=oy+.69*S,p=bt.ph;for(let i=0;i<22;i++){const x=mx+4+p*36+this.rand(i)*14,y=my-p*10+(this.rand(i+5)-.5)*(8+p*14);if(this.d(Math.round(x),Math.round(y))<(1-p)*.75)this.px(x,y,this.c(i%4?'#c8d0f0':'#ffffff'));}
+ this.rain(t,.3,lt*30);
+};
+
+// ── Ground level: his sneakers pound the wet asphalt, splashes on every step, street lights streaking behind.
+F._dc_sneaker=function(ax,ay,tilt,back){const P=Film.CAST.milton,c=k=>this.c(P[k]),co=Math.cos(tilt),si=Math.sin(tilt),R=p=>p.map(([x,y])=>[ax+x*co-y*si,ay+x*si+y*co]);
+ this.poly(R([[-16,-14],[-10,-24],[8,-22],[26,-12],[38,-8],[40,0],[-18,0]]),(x,y)=>this.d(x,y)<.12?c('shoeShade'):back?c('shoeShade'):c('shoe'));
+ this.poly(R([[-18,-4],[40,-4],[40,0],[-18,0]]),this.c('#e8e8f0'));this.poly(R([[-18,0],[40,0],[38,4],[-16,4]]),c('sole'));
+ this.poly(R([[-12,-8],[6,-14],[20,-10],[6,-10]]),c('jacket'));this.poly(R([[-18,-14],[-12,-14],[-12,-2],[-18,-2]]),c('yoke'));
+ for(let i=0;i<4;i++){const [a,b]=R([[2+i*5,-20+i*2.2]])[0],[a2,b2]=R([[5+i*5,-18+i*2.2]])[0];this.line(a,b,a2,b2,this.c('#4a4a5a'));}};
+F.shotRunLow=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,P=Film.P,hz=146,G=160,X=140,Lh=380,stride=Lh*.27,lift=Lh*.11,v=2*stride/P,cam=lt*v,a=walkAt(t)*Math.PI*2;
+ this.vgrad(0,0,W,hz,['#05050f','#0a0a20','#141232','#24184a']);
+ // Distant street: lights smeared into streaks by the speed.
+ for(let i=0;i<34;i++){const p=.1+this.rand(i)*.35,y=40+this.rand(i*3)*96,len=10+p*120,x=((this.rand(i*5)*600-cam*p)%600+600)%600-140,col=['#ffb04a','#ff3fa4','#3af0ff','#ffe14a'][i%4];
+  this.rect(x,y,len,1+(p>.3?1:0),(xx,yy)=>this.d(xx,yy)<.6*(1-Math.abs((xx-x)/len-.5)*1.4)?this.c(col):0);this.glow(x+len/2,y,6+p*10,col,.35);}
+ for(let i=0;i<9;i++){const x=((i*90-cam*.45)%810+810)%810-60;this.rect(x,hz-70,2,70,this.c('#14122a'));}
+ // Wet asphalt rushing under the lens.
+ const asp=[this.c('#0c0c1c'),this.c('#14142a'),this.c('#1e1e36'),this.c('#2a2a46')];
+ this.rect(0,hz,W,H-hz,(x,y)=>{const z=(y-hz)/(H-hz),sp=.2+z*1.8,u=Math.floor((x+cam*sp)/(3+z*10)),r=this.rand(u*131+y*7);return asp[r<.05?3:r<.2?2:r<.6?1:0];});
+ this.reflect(hz,G+2,hz-1,'#0c0c1c',t,1.5,.65);
+ // Legs: jeans cropped above the knee, detailed sneakers; heel strike tilts the toe up, push-off tilts it down.
+ this.beginLayer();const hipY=G-Lh*.47-Math.abs(Math.sin(a))*8,P2=Film.CAST.milton;
+ for(const i of [1,0]){const ai=a+i*Math.PI,lf=Math.max(0,Math.cos(ai))*lift,fx=X+Math.sin(ai)*stride,fy=G-lf,knee=[(X+fx)/2+20+lf*.5,(hipY+fy)/2],col=this.c(i?P2.jeansShade:P2.jeans);
+  this.quad(X,hipY,knee[0],knee[1],Lh*.085,Lh*.07,col);this.quad(knee[0],knee[1],fx,fy-26,Lh*.07,Lh*.06,col);this.line(knee[0]-8,knee[1]+4,fx-6,fy-30,this.c(i?'#1c2c52':'#4a68a8'));
+  this.rect(fx-14,fy-34,28,6,this.c(i?'#1c2c52':'#25396a'));
+  const tilt=lf>0?(Math.sin(ai)>0?-.22*(lf/lift):.35*(lf/lift)):0;this._dc_sneaker(fx-8,fy,tilt,!!i);}
+ this.endLayer('#ffb04a',-1);
+ // Splash on every landing.
+ for(let j=0;j<3;j++){const n=bt.n-j,tl=Film.BEAT0+n*P,age=t-tl;if(age<0||age>.7)continue;const gx=X+stride-8-v*age,cc=this.c('#d8e8ff'),cd=this.c('#8aa0d0');
+  this.ellipse(gx,G+2,8+age*90,2+age*10,(x,y,dx,dy)=>Math.abs(dx*dx+dy*dy-1)<.18?cd:0);
+  for(let i=0;i<26;i++){const an=Math.PI*(.08+.84*this.rand(i+n*41)),sp=60+this.rand(i*3+n)*170,x=gx+Math.cos(an)*sp*age-v*0,y=G-Math.sin(an)*sp*age+520*age*age;if(y>G+4)continue;const sz=this.rand(i+7)<.2?3:2;this.rect(x,y,sz,sz,i%3?cc:cd);}}
+ this.rain(t,.7,cam*.3,0,.35);
+};
+
+// ═════════ BASS ONLY, THEN THE FULL STOP ═════════
+
+// ── Medium tracking: her, walking past the warm window of a 24-hour laundromat on a quiet wet street.
+F.shotHerWalk=function(lt,t){
+ const W=this.W,H=this.H,k=Film.beat(t).kick,h=112,gy=170,v=.64*h,cam=-v*lt,X=196,fx=x=>Math.round(x-cam),fb=150;
+ this.vgrad(0,0,W,fb,['#0a0816','#120e22','#181430']);
+ // Neighbouring shops: a closed shutter on each side.
+ for(const [x0,x1]of [[-420,-80],[200,520]]){this.rect(fx(x0),0,x1-x0,fb,this.c('#1a1628'));this.rect(fx(x0)+10,40,x1-x0-20,fb-40,(x,y)=>this.c(y%4===0?'#100c1a':'#2a2438'));this.rect(fx(x0)+10,36,x1-x0-20,4,this.c('#3a3450'));}
+ // The laundromat: sign, big window with washers and dryers in warm light.
+ const L0=-80,L1=200,wx0=L0+8,wx1=L1-8,wy0=36,wy1=136;
+ this.rect(fx(L0),0,L1-L0,fb,this.c('#20283a'));this.rect(fx(L0),0,L1-L0,30,this.c('#141a28'));
+ this.glow(fx(60),15,40,'#5ff4ff',.25);this.text('LAVANDERIA',fx(L0+20),8,this.c('#bff8ff'),2,1);
+ this.rect(fx(wx0),wy0,wx1-wx0,wy1-wy0,(x,y)=>{const f=(y-wy0)/(wy1-wy0);return this.c(f<.04?'#fffbe8':this.d(x,y)<f*.9-.1?'#e0b878':'#fff0c8');});
+ for(let i=0;i<3;i++){const lx=fx(wx0+20+i*90);this.rect(lx,wy0+3,50,2,this.c('#ffffff'));}
+ this.rect(fx(wx0),wy1-12,wx1-wx0,12,(x,y)=>this.c(((Math.floor((x+cam)/8)+Math.floor(y/6))&1)?'#c8b8a0':'#8a7a68'));
+ for(let r=0;r<2;r++)for(let i=0;i<8;i++){const mx=fx(wx0+6+i*33),my=r?wy1-46:wy0+10,mw=28,mh=r?34:30;this.rect(mx,my,mw,mh,this.c(r?'#f4f0ea':'#dcd8d4'));this.rect(mx,my,mw,4,this.c('#a8a4b0'));this.rect(mx+mw-6,my+1,3,2,this.c(i%2?'#3aff8a':'#ff4a6a'));
+  const cx=mx+mw/2,cy=my+(r?20:18),rr=r?10:9,sp=t*(r?5:3)+i;this.ellipse(cx,cy,rr+1.5,rr+1.5,this.c('#8a8a98'));this.ellipse(cx,cy,rr,rr,(x,y,dx,dy)=>{const a=Math.atan2(dy,dx)+sp,bl=Math.sin(a*2)>.2&&dx*dx+dy*dy>.15;return this.c(bl?['#ff5f8a','#5fa8ff','#ffd04a','#8aff9a'][(i+r)%4]:dx<-.3&&dy<-.3?'#d8f0ff':'#3a4a6a');});}
+ for(let i=0;i<4;i++)this.rect(fx(wx0+i*(wx1-wx0)/3)-1,wy0,3,wy1-wy0,this.c('#2a2a3a'));this.rect(fx(wx0),wy0-2,wx1-wx0,3,this.c('#2a2a3a'));this.rect(fx(wx0),wy1,wx1-wx0,3,this.c('#2a2a3a'));
+ for(let y=wy0;y<wy1;y++)for(let x=fx(wx0);x<fx(wx1);x++){const u=(x+cam*.4)+y*.7;if(((u%140)+140)%140<10&&this.d(x,y)<.25)this.px(x,y,this.c('#ffffff'));}
+ this.rect(fx(150),wy0+8,34,14,this.c('#1a0a18'));this.glow(fx(167),wy0+15,22,'#ff3fa4',.45+k*.15);this.text('24H',fx(156),wy0+11,this.c(k>.6?'#ffd0ea':'#ff5fb4'),2,1);
+ this.rect(fx(L0),wy1+3,L1-L0,fb-wy1-3,this.c('#141a28'));
+ // Sidewalk with the window's light spilling on it.
+ this.rect(0,fb,W,H-fb,(x,y)=>this.c(this.d(x,y)<.1?'#2a2a40':'#1c1c30'));this.rect(0,fb,W,1,this.c('#3a3a58'));
+ this.poly([[fx(wx0),fb],[fx(wx1),fb],[fx(wx1)+30,H],[fx(wx0)-30,H]],(x,y)=>this.d(x,y)<.28-(y-fb)/(H-fb)*.18?this.c('#c8985a'):0);
+ this.reflect(fb+1,H,fb,'#16162a',t,1.4,.55);
+ this.beginLayer();this.person({x:X,y:gy,h,dir:-1,walk:walkAt(t),who:'her'});this.endLayer('#ffd8a0',1);
+ // A parking meter slides through the foreground.
+ const mx=fx(40)*1.6-200;if(mx>-20&&mx<W+20){this.beginLayer();this.rect(mx,118,5,H-118,this.c('#141220'));this.rect(mx-4,96,13,24,this.c('#1c1a2c'));this.rect(mx-2,100,9,7,this.c('#3a4a5a'));this.endLayer('#ffd8a0',1);}
+ this.rain(t,.45,cam);
+};
+
+// ── Narrow brick alley: Milton leans on the wall under a caged bulb, catching his breath; steam from a vent; slow push in.
+F.shotAlley=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,zc=1+.16*Film.ease(lt/4),fx=130,fy=90,VX=168,VY=70,f=150,GY=1.25,TOP=-3.6,ZE=9;
+ const bxW=-.92,byW=-.95,bzW=3.0,buzz=this.rand(Math.floor(t*20))<.04?.4:1;
+ const br=[['#1a0e14','#2a141c','#3e1c24','#5a2a2a','#8a4a32'],['#160c12','#24121a','#361a22','#4e2628','#7a4230']].map(a=>a.map(v=>this.c(v))),mort=[this.c('#0c070c'),this.c('#140c10'),this.c('#24161a'),this.c('#3a2420')];
+ const fl=['#0a0a14','#121222','#1e1c30','#3a2e3a','#8a6a4a'].map(v=>this.c(v)),endC=['#1a2a4a','#3a2a6a','#ff5fb4','#5ff4ff'].map(v=>this.c(v)),sky=this.c('#05050e');
+ const lightAt=(X,Y,Z)=>{const d=(X-bxW)**2+(Y-byW)**2*.8+(Z-bzW)**2;return buzz*1.6/(1+d*2.2)+.12/(1+Z*.2);};
+ this.rect(0,0,W,H,(x,y)=>{const px=fx+(x-fx)/zc,py=fy+(y-fy)/zc,dx=px-VX,dy=py-VY;let zw=Infinity,zf=Infinity;
+  if(dx!==0){const z=Math.abs(f/dx),Y=dy*z/f;if(Y>=TOP&&Y<=GY)zw=z;}if(dy>0){zf=f*GY/dy;if(Math.abs(dx*zf/f)>1)zf=Infinity;}
+  if(zf<zw&&zf<ZE){const X=dx*zf/f,I=lightAt(X,GY,zf),pud=this.rand(Math.floor(X*6)*31+Math.floor(zf*3)*7)<.35;return fl[Math.max(0,Math.min(4,Math.floor(I*(pud?5:3.2)+this.d(x,y)*.9-zf*.05)))];}
+  if(zw<ZE){const side=dx<0?0:1,X=side?1:-1,Y=dy*zw/f,u=zw*3.2,vv=Y*7.5,row=Math.floor(vv),off=(row&1)*.5,fu=u+off-Math.floor(u+off),fv=vv-row,I=lightAt(X,Y,zw)*(1-zw/ZE*.6);
+   if(fv<.16||fu<.1)return mort[Math.max(0,Math.min(3,Math.floor(I*3+this.d(x,y)*.6)))];const pal=br[(this.rand(row*131+Math.floor(u+off)*7+side)*2)|0];return pal[Math.max(0,Math.min(4,Math.floor(I*4.5+this.d(x,y)*.9)))];}
+  if(dy<0&&(zw===Infinity||zw>=ZE)&&Math.abs(dx)<f/ZE&&dy>TOP*f/ZE)return endC[Math.floor(Math.max(0,Math.min(3,(dy-TOP*f/ZE)/(-TOP*f/ZE+GY*f/ZE)*2+this.d(x,y)+(Math.abs(dx)<4?1:0))))];
+  if(dy>0)return endC[0];return sky;});
+ const S=(X,Y,Z)=>[fx+(VX+X*f/Z-fx)*zc,fy+(VY+Y*f/Z-fy)*zc];
+ // Far street glow, pipes, the vent and its steam.
+ const [ex,ey]=S(0,0,ZE);this.glow(ex,ey,30*zc,'#ff3fa4',.35);
+ for(const [X,Z0,Z1,Y]of [[1,1.2,8,-2.2],[-1,4,8,-2.6]]){const [a,b]=S(X,Y,Z0),[a2,b2]=S(X,Y,Z1);this.line(a,b,a2,b2,this.c('#2a2236'),2);}
+ {const [a,b]=S(1,-3.6,2.6),[a2,b2]=S(1,GY,2.6);this.line(a,b,a2,b2,this.c('#241c2e'),Math.max(2,4*zc));this.line(a-1,b,a2-1,b2,this.c('#4a3a4a'));}
+ const [vx,vy]=S(1,.4,2.1),vw=18*zc;this.rect(vx-vw,vy-8*zc,vw,14*zc,this.c('#1a1620'));for(let i=0;i<4;i++)this.rect(vx-vw+2,vy-6*zc+i*3.4*zc,vw-4,1,this.c('#3a3444'));
+ for(let i=0;i<46;i++){const q=(t*.32+this.rand(i))%1,x=vx-vw/2-q*30-Math.sin(q*6+i)*6,y=vy-q*80*zc,r=(2+q*10)*zc,lit=Math.hypot(x-S(bxW,byW,bzW)[0],y-S(bxW,byW,bzW)[1])<70;
+  this.ellipse(x,y,r,r*.8,(xx,yy)=>this.d(xx,yy)<(1-q)*.5?this.c(lit?'#f0d8b8':'#a8a0c0'):0);}
+ // Milton against the wall, chest heaving; breath on the beats.
+ const [mx,mg]=S(-.8,GY,3.2),h=1.75*f/3.2*zc,heave=bt.ph<.3?1:0;
+ this.beginLayer();const o=this.person({x:mx+h*.06,y:mg,h,dir:1,walk:.25,who:'milton',pose:'stand',arms:[[.25,.5],[.1,.3]]});this._dc_shear(mg,-.1);
+ if(heave){const b=this.box,L=this.L;for(let y=Math.max(1,b[1]);y<Math.round(mg-h*.55);y++)for(let x=b[0];x<=b[2];x++)L[(y-1)*W+x]=L[y*W+x];}
+ this.endLayer('#ffb04a',1);
+ if(bt.n%2===0){const p=bt.ph,hx=o.head[0]-(mg-o.head[1])*.1+o.q*.4,hy=o.head[1]+o.q*.3;for(let i=0;i<16;i++){const x=hx+p*22+this.rand(i)*8,y=hy-p*10+(this.rand(i+5)-.5)*(6+p*10);if(this.d(Math.round(x),Math.round(y))<(1-p)*.7)this.px(x,y,this.c('#e8d8c8'));}}
+ // The caged bulb on its bracket, warm cone through the rain.
+ const [bx,by]=S(bxW,byW,bzW),[wx,wy]=S(-1,byW-.1,bzW);this.line(wx,wy,bx,wy,this.c('#2a2230'),2);this.line(bx,wy,bx,by-4,this.c('#2a2230'));
+ this.poly([[bx-3,by],[bx+3,by],[bx+40*zc,mg+6],[bx-30*zc,mg+6]],(x,y)=>this.d(x,y)<.08*buzz?this.c('#ffcf8a'):0);
+ this.glow(bx,by,40*zc,'#ffb04a',.5*buzz+k*.05);this.ellipse(bx,by+1,3.5*zc,4.5*zc,this.c(buzz<1?'#8a6a3a':'#fff6d0'));
+ for(let i=-1;i<=1;i++)this.line(bx+i*3*zc,by-3*zc,bx+i*3.5*zc,by+5*zc,this.c('#3a3040'));this.line(bx-4*zc,by+1,bx+4*zc,by+1,this.c('#3a3040'));
+ this.rain(t,.8,0,0,.08);
+ for(let i=0;i<30;i++){const x=bx-30+this.rand(i)*70,y=((this.rand(i*3)*H+t*260)%H);if(y>by&&y<mg)this.line(x,y,x+1,y+6,this.c('#ffcf8a'));}
+};
+
+// ── Split screen: him on a street corner, her on a balcony, both looking up — the same moon across the divider. Slow tilt up.
+F.shotSameMoon=function(lt,t){
+ const W=this.W,H=this.H,tilt=Math.round(46*Film.ease(lt/6)),y=v=>v+tilt,D=159;
+ // Left: indigo street corner.
+ this.vgrad(0,0,D,H,['#04040e','#080a1e','#0e1430','#16204a','#1c2a56']);
+ this.vgrad(D+2,0,W-D-2,H,['#06040c','#0e0818','#1a0e28','#2a1436','#3a1a40']);
+ for(let i=0;i<40;i++){const x=this.rand(i*3)*W,yy=this.rand(i*7)*130-40;if(Math.abs(x-D)<2)continue;if(this.rand(i+Math.floor(t*3))<.85)this.px(x,y(yy),this.c(i%3?'#8a8ab0':'#ffffff'));}
+ // The moon: one disc, split by the divider; a cloud band drifts across both panels.
+ const mx=D+1,my=y(34),mr=24;this.glow(mx,my,60,'#8a7ab0',.45);
+ this.ellipse(mx,my,mr,mr,(x,yy,dx,dy)=>{const cr=[[-.4,-.2,.22],[.3,.35,.16],[.15,-.45,.12],[-.1,.5,.1]];for(const [cx,cy,r]of cr)if((dx-cx)**2+(dy-cy)**2<r*r)return this.c('#d0c8e4');return dx<-.55&&dy>-.2?this.c('#c8c0e0'):this.c('#f4eeff');});
+ for(let i=0;i<3;i++){const cy=y(30+i*14),cx=((lt*8+i*90)%380)-60;this.ellipse(cx+40,cy,60,3,(x,yy)=>this.d(x,yy)<.35?this.c(x<D?'#1a2048':'#2a1a40'):0);}
+ // Left panel: corner building, street sign, lamp, Milton looking up.
+ this.rect(0,y(40),46,H,this.c('#181a34'));this.rect(46,y(40),3,H,this.c('#0e1022'));for(let wy=50;wy<160;wy+=18)for(let wx=8;wx<40;wx+=14)this.rect(wx,y(wy),8,10,this.c(this.rand(wx+wy)<.4?'#ffcf7a':'#0c0c1c'));
+ this.rect(70,y(110),2,62,this.c('#2a2a44'));this.rect(58,y(108),26,7,this.c('#1a5a3a'));this.text('CALLE',60,y(109),this.c('#e8f6ee'),1,1);
+ this.rect(138,y(88),2,84,this.c('#2a2840'));this.rect(132,y(86),12,3,this.c('#3a3654'));this.rect(134,y(89),8,1,this.c('#ffcf8a'));this.glow(138,y(92),20,'#ffb04a',.45);
+ this.rect(0,y(172),D,H,this.c('#12122a'));this.rect(0,y(172),D,1,this.c('#3a3a5a'));for(let i=0;i<5;i++)this.rect(10+i*30,y(178),18,3,this.c('#2a2a46'));
+ const look=(x,gy,h,dir,who,rim)=>{this.beginLayer();const o=this.person({x,y:gy,h,dir,walk:.3,who,pose:'stand'});const q=o.q,[hx,hy]=o.head;this._dc_rot(hx-q*1.05,hy-q*.95,hx+q*1.05,hy+q*.42,hx-dir*q*.15,hy+q*.42,-dir*.38);this.endLayer(rim,dir);return o;};
+ look(100,y(172),74,1,'milton','#9fd8ff');
+ // Right panel: her balcony — stucco wall, lit window, wrought-iron rail.
+ this.rect(D+2,y(60),W-D-2,H,this.c('#2a1a30'));this.rect(250,y(70),50,74,this.c('#0e0812'));this.vgrad(253,y(73),44,68,['#ffd890','#e0a058','#a8683a']);this.rect(274,y(73),2,68,this.c('#0e0812'));this.glow(275,y(110),40,'#ffb04a',.3);
+ this.rect(D+2,y(150),W-D-2,6,this.c('#3a2a3a'));this.rect(D+2,y(150),W-D-2,1,this.c('#6a4a5a'));this.rect(D+2,y(156),W-D-2,H,this.c('#120a16'));
+ look(214,y(150),72,-1,'her','#ffd0a0');
+ const iron=this.c('#0a060c');this.rect(D+2,y(118),W-D-2,3,iron);for(let x=D+6;x<W;x+=8){this.rect(x,y(118),1,32,iron);if((x>>3)&1)this.ellipse(x+4,y(132),3,4,(xx,yy,dx,dy)=>Math.abs(dx*dx+dy*dy-.8)<.3?iron:0);}
+ this.rect(D+8,y(136),12,14,this.c('#5a2a1a'));for(let i=0;i<6;i++)this.ellipse(D+10+i*2,y(132)-this.rand(i)*8,3,4,this.c(i%2?'#2a6a3a':'#3a8a4a'));
+ // Divider.
+ this.rect(D,0,2,H,this.c('#020206'));this.rect(D-1,0,1,H,this.c('#2a2840'));this.rect(D+2,0,1,H,this.c('#2a2840'));
+};
+
+// ── The song stops dead: a black frame, his silhouette frozen mid-step, only the yellow beanie glowing; rain hangs in the air.
+F.shotFreeze=function(lt,t){
+ const W=this.W,H=this.H,zc=1+.035*lt,fx=150,fy=100,Z=(x,y)=>[fx+(x-fx)*zc,fy+(y-fy)*zc],h=96*zc,[px,gy]=Z(150,150);
+ this.clear('#020205');this.vgrad(0,gy-20,W,H-gy+20,['#020205','#04040c','#05050f']);
+ const P=Film.CAST.milton,keep=new Set(['beanie','beanieLight','beanieShade','beanieDark'].map(n=>this.c(P[n])));
+ this.beginLayer();const o=this.person({x:px,y:gy,h,dir:1,walk:.08,who:'milton'});const [hx,hy]=o.head,bc=[hx,hy-o.q*.35];
+  const dk=this.c('#0d0b16'),wm=this.c('#3a2e14');this._dc_tint((x,y,r,g,b)=>{const v=((255<<24)|(b<<16)|(g<<8)|r)>>>0;if(keep.has(v))return 0;return Math.hypot(x-bc[0],y-bc[1])<o.q*1.3&&this.d(x,y)<.4?wm:dk;});
+ // Glow first so it sits behind the figure.
+ const save=this.L.slice(),box=this.box.slice();this.T=this.buf;this.box=null;this.glow(bc[0],bc[1],38*zc,'#ffd23a',.42);this.glow(bc[0],bc[1],16*zc,'#fff08a',.35);this.L.set(save);this.T=this.L;this.box=box;
+ this.endLayer('#3a3458',1);
+ // Faint reflection of the beanie on the wet ground.
+ this.glow(bc[0],gy+(gy-bc[1])*.35,14*zc,'#a08a2a',.3,.35);
+ // Frozen raindrops: dim, warm where the beanie lights them.
+ for(let i=0;i<240;i++){const [x,y]=Z(this.rand(i*3)*W,this.rand(i*7)*H),d=Math.hypot(x-bc[0],y-bc[1]);const col=d<34?'#ffe08a':d<70?'#8a7a3a':'#22223a';this.px(x,y,this.c(col));this.px(x+.2,y+1,this.c(d<34?'#c8a84a':d<70?'#4a4220':'#16162a'));}
+ // In the last half-second, one faint heartbeat.
+ const hb=Math.exp(-(((lt-1.62)/.09)**2));if(hb>.03){const cx=o.sh[0]+o.q*.2,cy=o.sh[1]+h*.08;this.glow(cx,cy,(6+hb*8)*zc,'#ff2a4a',.4*hb);if(hb>.5){this.px(cx,cy,this.c('#ff6a7a'));this.px(cx+1,cy,this.c('#c02a3a'));}}
 };
