@@ -635,3 +635,65 @@ F.shotRancho=function(lt,t){
  this._ch_rancho(lt,t,{Z:1+Film.ease(lt/6)*.9,open,pour,leak:e<0?Math.max(0,(lt-.6)/1.4):0,milton:{x:166,y:168,h:26,sil:e>=0}});
  this.rain(t,.15,0);
 };
+
+// ───── Final chorus ─────
+// ── Rooftop run: side tracking across the roofs; he clears the gap between two buildings on the downbeat of bar 121.
+// The red thread on his pinky stretches ahead out of frame, leading him.
+F.shotRoofRun=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,h=80,speed=104,camX=lt*speed,X=118,P=Film.CAST.milton;
+ const t1=1.5,t2=2.5,gA=134,gB=144,xEdge=t1*speed+X+10,xB=t2*speed+X-10;
+ this.vgrad(0,0,W,H,['#05050f','#0a0a22','#141236','#22184a','#3a2058','#4a2462']);
+ for(let i=0;i<60;i++){const x=((this.rand(i*3)*360-camX*.03)%360+360)%360-20,y=this.rand(i*7)*80;this.px(x,y,this.c(this.rand(i)<.2?'#e8e4ff':'#5a5888'));}
+ const mx=250-camX*.04;this.glow(mx,36,50,'#8a7ab0',.4);this.ellipse(mx,36,15,15,(x,y,dx,dy)=>dx<-.4&&dy<.3?this.c('#c8c0e0'):this.c('#f0eaff'));this.rect(mx-6,32,4,3,this.c('#d8d0ec'));
+ this._ch_skyline(camX,.12,150,61,30,100,['#0e0d24','#12112c','#24204a'],t,.14);
+ this._ch_skyline(camX,.3,165,71,20,70,['#141230','#171535','#2a2652'],t,.2);
+ // The two near buildings and the gap between them, a long drop to a lit alley.
+ const sx=v=>Math.round(v-camX);
+ const gl=sx(xEdge),gr=sx(xB);
+ this.rect(gl,gA,gr-gl,H-gA,(x,y)=>this.c(this.d(x,y)<(y-gA)/(H-gA)*.5?'#120c1c':'#05040a'));for(let y=gA+14;y<H;y+=12){this.rect(gl+4,y,gr-gl-8,1,this.c('#1c1628'));for(let q=gl+8;q<gr-8;q+=14)this.line(q,y,q+10,y+12,this.c('#16101f'));}for(let q=0;q<3;q++){const wy=gA+20+q*14;this.rect(gl+10+q*17,wy,5,7,this.c(q===1?'#ffcf7a':'#5a3a2a'));}this.glow((gl+gr)/2,H+6,36,'#ffb04a',.45,.6);
+ const bldg=(x0,x1,gy,col)=>{if(x1<-10||x0>W+10)return;this.rect(x0,gy,x1-x0,H-gy,(x,y)=>{const u=x+Math.round(camX),row=Math.floor((y-gy)/4);return this.c(((y-gy)%4===0||((u+(row&1)*4)%8===0))?'#140f22':col);});
+  for(let wy=gy+14;wy<H;wy+=20)for(let wx=x0+10;wx<x1-14;wx+=22){const h2=this.rand((wx+Math.round(camX))*7+wy);this.rect(wx,wy,10,12,this.c(h2<.35?'#d89a50':'#0c0a18'));}
+  this.rect(x0,gy-6,x1-x0,6,this.c('#2e2840'));this.rect(x0,gy-7,x1-x0,1,this.c('#5a4f7a'));this.rect(x1-2,gy-6,2,H-gy+6,this.c('#3a3058'));};
+ bldg(-20,gl,gA,'#1e1830');bldg(gr,W+20,gB,'#1c1a34');
+ // Roof clutter: water tank, vents, an antenna.
+ const tk=sx(150);if(tk>-60&&tk<W+20){this.rect(tk,gA-48,34,30,this.c('#2c2236'));for(let q=0;q<4;q++)this.rect(tk-1,gA-46+q*8,36,1,this.c('#4a3e5e'));this.poly([[tk-3,gA-48],[tk+17,gA-60],[tk+37,gA-48]],this.c('#2a2034'));for(const lx of [tk+3,tk+28])this.rect(lx,gA-18,3,12,this.c('#1c1828'));}
+ const vt=sx(xB+120);if(vt<W+30){this.rect(vt,gB-22,22,16,this.c('#241e34'));this.rect(vt-2,gB-24,26,3,this.c('#3a3254'));this.rect(vt+40,gB-60,2,54,this.c('#1c1828'));for(let q=0;q<3;q++)this.rect(vt+34+q,gB-52+q*8,14-q*4,1,this.c('#1c1828'));if(bt.n%2===0)this.px(vt+40,gB-61,this.c('#ff4a5a'));}
+ // Milton: run → leap over the gap (legs split, arms reaching) → land and run on.
+ let y=gA,walk=((t-Film.BEAT0)/Film.P)/2+.25,arms=null;
+ const wx=camX+X;if(lt>=t1&&lt<t2){const u=(lt-t1)/(t2-t1);y=gA+(gB-gA)*u-Math.sin(u*Math.PI)*46;walk=Math.floor(((Film.BEAT0+Math.round((B(121)-Film.BEAT0)/Film.P)*Film.P)-Film.BEAT0)/Film.P/2)+.25;arms=[[2.2,.2],[-1.4,.5]];}else if(lt>=t2)y=gB;
+ this.beginLayer();const out=this.person({x:X,y,h,dir:1,walk,who:'milton',pose:'run',arms});this.endLayer(k>.5?'#ffe0f0':'#ff8fd0',1);
+ if(lt>=t1&&lt<t2)for(let q=0;q<6;q++){const yy=y-h*.2-q*9;this.rect(X-40-q*6,yy,26,1,this.c('#b8bce8'));}
+ const [hx,hy]=out.hands[0];this.redThread(hx,hy,W+24,hy-34+Math.sin(lt*2)*6,6,t,.7,1.4);
+ this.rain(t,.4,camX);
+};
+// ── Her side of the city: she runs (to the left) down a wet neon street, the red thread on her pinky pulling ahead.
+F.shotHerRun=function(lt,t){this._ch_runStreet(lt,t,{who:'her',dir:-1,thread:true,signs:['CAFE','FLORES','LIBROS','HOTEL','BAR','LAVADERO'],seed:9,h:88});};
+// ── The maze again: now the red thread marks the true path and he runs it, solving the maze; the camera pulls up to the exit.
+F.shotMazeThread=function(lt,t){
+ const bt=Film.beat(t),k=bt.kick,M=this._ch_mazeData(),CS=40,lb=lt/Film.P,sol=M.solution,L=sol.length-1,rate=L/7.2;
+ const pos=m=>this._ch_mazeAt(sol,m,CS);
+ const m=Math.min(L,lb*rate),p=pos(m);let cx=0,cy=0;for(let q=0;q<6;q++){const pp=pos(Math.min(L,(lb-q*.1)*rate));cx+=pp.x/6;cy+=pp.y/6;}
+ const zu=Film.ease((lt-2.7)/1.2),Z=.8*(1-zu)+.19*zu,mid=M.N*CS/2,camX=cx+(mid-cx)*zu,camY=cy+(mid-cy)*zu;
+ this._ch_mazeDraw({camX,camY,Z,t,k,thread:sol});
+ // A bright pulse races ahead of him along the thread on every beat.
+ const sxy=([i,j])=>[((i+.5)*CS-camX)*Z+160,((j+.5)*CS-camY)*Z+90];
+ const pq=Math.min(L,m+bt.ph*6);if(pq<L){const a=sol[Math.floor(pq)],b=sol[Math.min(L,Math.floor(pq)+1)],f=pq%1,[ax,ay]=sxy(a),[bx2,by2]=sxy(b);this.glow(ax+(bx2-ax)*f,ay+(by2-ay)*f,6,'#ffd0d8',.9*(1-bt.ph));}
+ const ang=Math.atan2(p.dy||0,p.dx||1),sx=(p.x-camX)*Z+160,sy=(p.y-camY)*Z+90;
+ if(m<L){this.beginLayer();this.personTop({x:sx,y:sy,r:Math.max(2,10*Z),ang,walk:lb,who:'milton'});this.endLayer(k>.5?'#ffe0f0':'#ff8fd0',1);
+  if(Z>.5)for(let q=1;q<4;q++)this._ch_dline(sx-Math.cos(ang)*(8+q*5)*Z*1.5,sy-Math.sin(ang)*(8+q*5)*Z*1.5,sx-Math.cos(ang)*(14+q*5)*Z*1.5,sy-Math.sin(ang)*(14+q*5)*Z*1.5,this.c('#ffd0ea'),.6);}
+ else{const e=(lb*rate-L)/rate*Film.P;this.glow(sx+20*Z,sy,20+e*60,'#fff1d8',.8);}
+ if(zu>.4&&m<L){this.ellipse(sx,sy,7,7,(x,y,dx,dy)=>Math.abs(dx*dx+dy*dy-.8)<.2?this.c('#ffe14a'):0);}
+ this._ch_rainTop(t,50);
+};
+// ── The rancho with the universe inside: the red thread runs through the door into the stars, and Milton steps through.
+F.shotRanchoBoth=function(lt,t){
+ const walkIn=Math.min(1,lt/2.7),inside=Math.max(0,(lt-2.7)/1.3),wy=184-34*Film.ease(walkIn)-inside*10,h=36-12*walkIn-inside*16;
+ const r=this._ch_rancho(lt,t,{Z:1.75+lt*.12,open:1,pour:1,milton:{x:179,y:wy,h:Math.max(4,h),walk:inside>=1?0:walkAt(t),sil:true,clip:inside>0}});
+ const m=r?null:null;
+ const Z=1.75+lt*.12,zf=Math.min(1,(Z-1)/1.2),X=x=>(x-179)*Z+179+(160-179)*zf,Y=y=>(y-135)*Z+135+(100-135)*zf;
+ const hh=Math.max(4,h)*Z,hx=X(179)+hh*.13,hy=Y(wy)-hh*.47;
+ // Thread: from beyond the frame, through his pinky, over the threshold and into the heart of the galaxy.
+ if(inside<.6){this.redThread(X(150),this.H+12,hx,hy,4,t,.6,1);this.redThread(hx,hy,r.gcx,r.gcy,-2,t,.8,.8);}
+ else this.redThread(X(150),this.H+12,r.gcx,r.gcy,6,t,.8,1);
+ this.glow(r.gcx,r.gcy,8,'#ff2a3a',.6+Film.beat(t).kick*.3);
+};

@@ -564,3 +564,62 @@ F.shotPinky=function(lt,t){
  this.glow(kx+w/2,ky,20,'#ff2a3a',.3+tug*.3);
  for(let i=0;i<16;i++){const x=this.rand(i*7)*W,y=(this.rand(i*3)*H+t*28*(1+i%3))%H;this.px(x,y,C('#e8fbff'));this.px(x,y+1,C('#8fb8c8'));}
 };
+
+// Distant iron truss bridge (same look as shotBridge: purple lattice, sodium lamps), deck at y, from x0 to x1.
+F._mt_farBridge=function(x0,x1,deck,t,hgt=22){
+ const C=h=>this.c(h),k=Film.beat(t).kick,iron=C('#4a4068'),hi=C('#7a6fa0'),top=deck-hgt,pan=18;
+ this.rect(x0,top,x1-x0,2,iron);this.rect(x0,top,x1-x0,1,hi);this.rect(x0-10,deck,x1-x0+20,3,C('#2a2440'));this.rect(x0-10,deck,x1-x0+20,1,hi);
+ for(let x=x0;x<=x1;x+=pan){this.rect(x,top,1,hgt,iron);if(x+pan<=x1){this.line(x,top+2,x+pan,deck-1,iron);this.line(x+pan,top+2,x,deck-1,iron);}}
+ for(let x=x0+9;x<x1;x+=36){this.rect(x,deck-8,1,8,C('#3a3456'));this.px(x,deck-9,C('#ffcf8a'));this.glow(x,deck-8,9,'#ffb04a',.5+k*.2);}
+ for(let x=x0+30;x<x1;x+=60){this.rect(x-2,deck+3,4,14,C('#1a1628'));}
+};
+// Fast tracking shot along the taut red thread over the rooftops; at the end it leads to the iron bridge across the river.
+F.shotThreadTrack=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,C=h=>this.c(h),e=lt+lt*lt*.06,far=e*34,mid=e*130,near=e*300,hz=128;
+ this._mt_grad(0,hz,['#05050f','#090a1c','#11122c','#1b1840','#2a2052','#3a2a62']);
+ this._mt_stars(50,91,100,far*.3,0,t);
+ this.ellipse(286-far*.2,30,10,10,(x,y,dx,dy)=>dx<-.4&&dy<.3?C('#c8c0e0'):C('#f0eaff'));this.glow(286-far*.2,30,30,'#8a7ab0',.25);
+ // River and the far bank.
+ this._mt_grad(hz,H,['#1a1640','#100e2a','#080818']);
+ const edge=300-far;
+ for(let i=0;i<40;i++){const x=Math.round(i*12-far*.7+(this.rand(i)*6)),bw=8+this.rand(i*3)*10,h=10+this.rand(i*5)*16;if(x>W)break;this.rect(x,hz-h,bw,h,C('#15143a'));for(let q=0;q<4;q++)if(this.rand(i*9+q)<.6)this.px(x+2+this.rand(i+q*3)*(bw-4),hz-h+3+this.rand(i*7+q)*(h-5),C('#ffcf7a'));}
+ for(let i=0;i<30;i++){const X=i*14,x=Math.round(X-far),h=20+this.rand(i*13)*42,bw=12+this.rand(i*7)*6;if(X>300)break;this.rect(x,hz-h,bw,h+2,C(i&1?'#141230':'#17153a'));for(let wy=hz-h+3;wy<hz-2;wy+=4)for(let wx=x+2;wx<x+bw-2;wx+=3)if(this.rand(i*977+wy*7+wx*3+Math.round(far)*0)<.2)this.px(wx,wy,C('#ffcf7a'));}
+ const bx0=330-far,bx1=560-far;this._mt_farBridge(bx0,bx1,hz-4,t,24);
+ this._mt_mirror(Math.max(0,edge),W,hz+1,H,hz,'#0a0a1e',t,.6);
+ // Mid rooftops with lit windows (end before the river).
+ for(let i=0;i<40;i++){const X=i*34,x=Math.round(X-mid),bw=26+this.rand(i*3+1)*12,top=96+this.rand(i*5+1)*30;if(X>700)break;if(x>W||x+bw<0)continue;
+  this.rect(x,top,bw,H-top,C(i&1?'#0e0d22':'#110f28'));this.rect(x,top,bw,1,C('#2a2448'));for(let wy=top+5;wy<H;wy+=6)for(let wx=x+3;wx<x+bw-3;wx+=5)if(this.rand(i*131+wy*7+wx*3-Math.round(x)*3)<.25)this.rect(wx,wy,2,2,C('#ffcf7a'));
+  if(this.rand(i*17)<.4){this._mt_tank(x+6,top,12,12,8);}}
+ // The thread: taut from the lens to the bridge's top chord, humming on the beat.
+ const tx=bx0+40,ty=hz-28;
+ this.redThread(-10,58,tx,ty,2,t,.55+k*.3,1+k*2);
+ this.glow(tx,ty,12,'#ff2a3a',.4+k*.3);
+ // Near rooftops whip past in silhouette: antennas, water tanks, chimneys.
+ const ink=C('#06050c');
+ for(let i=0;i<60;i++){const X=i*58,x=Math.round(X-near),r=this.rand(i*29+3),top=136+r*20;if(X>1330)break;if(x>W+40||x+70<-40)continue;
+  this.rect(x,top,60,H-top,ink);this.rect(x,top,60,1,C('#3a2a4a'));
+  if(r<.33){this.rect(x+24,top-80,2,80,ink);for(let q=0;q<4;q++)this.rect(x+16+q,top-74+q*9,18-q*2,2,ink);this.rect(x+24,top-82,2,2,C(bt.n%2?'#ff3a4a':'#5a1a24'));}
+  else if(r<.66){this.rect(x+12,top-20,4,20,ink);this.rect(x+30,top-20,4,20,ink);this.rect(x+8,top-48,30,28,ink);this.poly([[x+6,top-48],[x+23,top-60],[x+40,top-48]],ink);this.rect(x+38,top-48,1,28,C('#5a2a5a'));}
+  else{this.rect(x+10,top-26,12,26,ink);this.rect(x+8,top-28,16,3,ink);this.rect(x+40,top-16,10,16,ink);}}
+ // Speed streaks.
+ for(let i=0;i<14;i++){const y=this.rand(i*7)*H,x=((this.rand(i*3)*W*2-t*900)%(W*2)+W*2)%(W*2)-W/2,l=20+this.rand(i)*40;this.rect(x,y,l,1,C(i%3?'#3a3a6a':'#8a8ac0'));}
+ this.rain(t,.4,t*300,0,-1.6);
+};
+
+// Close-up: Milton looks up and slowly smiles; the thread's red light on his face, rain sparkling red.
+F.shotSmile=function(lt,t){
+ const W=this.W,H=this.H,bt=Film.beat(t),k=bt.kick,C=h=>this.c(h),S=118+lt*3,ox=78-lt*2,oy=30-lt;
+ this.vgrad(0,0,W,H,['#05040e','#0c0820','#1a0c2a','#240c2c']);
+ for(const [bx,by,r,col]of [[260,40,34,'#ff2a3a'],[30,60,20,'#3af0ff'],[300,140,26,'#ff3fa4'],[60,150,18,'#a03aff'],[210,120,16,'#ffb04a']])this.glow(bx-lt*4,by,r,col,.55);
+ // The thread runs across the top of frame, glowing.
+ this.redThread(150,-6,W+10,52,6,t,.7+k*.3,1.5);this.glow(250,26,40,'#ff2a3a',.3+k*.15);
+ this.beginLayer();
+ this.portrait({x:ox,y:oy,S,who:'milton',dir:1,look:-1,smile:lt>.95?1:0,blink:lt>1.9&&lt<2.0,kick:k,rimFront:k>.5?'#ffd0d0':'#ff6a7a',rimBack:'#5fe8f0'});
+ // Red light from above-front warms the face and the beanie.
+ const b=this.box,L=this.L;
+ for(let y=Math.max(0,b[1]);y<=Math.min(H-1,b[3]);y++)for(let x=Math.max(0,b[0]);x<=Math.min(W-1,b[2]);x++){const v=L[y*W+x];if(!v)continue;const q=Math.hypot(x-240,(y-10)*1.2)/180;if(q<1&&this.d(x,y)<(1-q)*.8){const r=v&255,g=(v>>8)&255,bb=(v>>16)&255;L[y*W+x]=((255<<24)|((bb*.55|0)<<16)|((g*.6|0)<<8)|Math.min(255,r*.9+70))>>>0;}}
+ this.endLayer();
+ // Rain sparkles, some caught red.
+ for(let i=0;i<30;i++){const x=this.rand(i*7)*W,y=(this.rand(i*3)*H+t*60*(1+i%3))%H,red=x>150&&y<100;this.px(x,y,C(red?'#ffb0b0':'#e8fbff'));this.px(x,y+1,C(red?'#ff3a4a':'#8fb8c8'));}
+ this.rain(t,.25,lt*6);
+};
