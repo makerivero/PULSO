@@ -80,6 +80,14 @@ document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target.tagName!==
 class BlobSink{constructor(){this.blob=new Blob([]);}write(data,pos){const d=new Uint8Array(data),end=this.blob.size;if(pos===end)this.blob=new Blob([this.blob,d]);else if(pos>end)this.blob=new Blob([this.blob,new Uint8Array(pos-end),d]);else this.blob=new Blob([this.blob.slice(0,pos),d,this.blob.slice(Math.min(end,pos+d.length))]);}}
 async function pick(W,H){for(const [codec,mux]of [[W>1280?'avc1.640028':'avc1.64001F','avc'],['vp09.00.40.08','vp9']]){const cfg={codec,width:W,height:H,bitrate:W>1280?10e6:6e6,framerate:30};try{if((await VideoEncoder.isConfigSupported(cfg)).supported)return {cfg,mux};}catch{}}return null;}
 async function pickA(sr){if(!('AudioEncoder' in window))return null;for(const [codec,mux]of [['mp4a.40.2','aac'],['opus','opus']]){const cfg={codec,sampleRate:sr,numberOfChannels:2,bitrate:192000};try{if((await AudioEncoder.isConfigSupported(cfg)).supported)return {cfg,mux};}catch{}}return null;}
+// RGBA from the WebGL canvas (bottom-up rows) → I420, BT.709 limited range.
+function toI420(g,W,H,rgba,yuv){
+ g.readPixels(0,0,W,H,g.RGBA,g.UNSIGNED_BYTE,rgba);const Y=yuv,U=W*H,V=U+U/4,cw=W/2;
+ for(let y=0;y<H;y++){const src=(H-1-y)*W*4,dst=y*W;for(let x=0;x<W;x++){const o=src+x*4;Y[dst+x]=16+((0.2126*rgba[o]+0.7152*rgba[o+1]+0.0722*rgba[o+2])*219/255+.5|0);}}
+ for(let y=0;y<H;y+=2){const r0=(H-1-y)*W*4,r1=(H-2-y)*W*4,d=(y>>1)*cw;for(let x=0;x<W;x+=2){const a=r0+x*4,b=a+4,c=r1+x*4,e=c+4;
+  const R=(rgba[a]+rgba[b]+rgba[c]+rgba[e])/4,G=(rgba[a+1]+rgba[b+1]+rgba[c+1]+rgba[e+1])/4,B=(rgba[a+2]+rgba[b+2]+rgba[c+2]+rgba[e+2])/4;
+  yuv[U+d+(x>>1)]=128+((-0.1146*R-0.3854*G+0.5*B)*224/255+.5|0);yuv[V+d+(x>>1)]=128+((0.5*R-0.4542*G-0.0458*B)*224/255+.5|0);}}
+}
 async function exportRange(from,to,res=1080,withAudio=true,fps=30){
  const W=res>720?1920:1280,H=res>720?1080:720,v=await pick(W,H);if(!v)throw new Error('Este navegador no puede codificar video. Usá Chrome o Edge de escritorio.');
  const a=withAudio&&buf?await pickA(buf.sampleRate):null,sink=new BlobSink();
@@ -87,9 +95,13 @@ async function exportRange(from,to,res=1080,withAudio=true,fps=30){
  let fail=null;
  if(a){const enc=new AudioEncoder({output:(c,m)=>muxer.addAudioChunk(c,m),error:e=>fail=e});enc.configure(a.cfg);const sr=buf.sampleRate,s0=Math.round(from*sr),n=Math.round((to-from)*sr),L=buf.getChannelData(0),R=buf.getChannelData(1);
   for(let i=0;i<n;i+=4096){const k=Math.min(4096,n-i),data=new Float32Array(k*2);data.set(L.subarray(s0+i,s0+i+k),0);data.set(R.subarray(s0+i,s0+i+k),k);const ad=new AudioData({format:'f32-planar',sampleRate:sr,numberOfFrames:k,numberOfChannels:2,timestamp:Math.round(i/sr*1e6),data});enc.encode(ad);ad.close();}await enc.flush();enc.close();}
- const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const out=new CRT(canvas),enc=new VideoEncoder({output:(c,m)=>muxer.addVideoChunk(c,m),error:e=>fail=e});enc.configure(v.cfg);
+ // Frames are converted here to BT.709 limited-range I420 and tagged as such, so every player shows true blacks
+ // (letting the encoder guess the canvas colour space made some players show the export washed out).
+ const CS={primaries:'bt709',transfer:'bt709',matrix:'bt709',fullRange:false};
+ const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;const out=new CRT(canvas),enc=new VideoEncoder({output:(c,m)=>{if(m&&m.decoderConfig)m.decoderConfig.colorSpace=CS;muxer.addVideoChunk(c,m);},error:e=>fail=e});enc.configure(v.cfg);
+ const rgba=new Uint8Array(W*H*4),yuv=new Uint8Array(W*H*3/2);
  const total=Math.round((to-from)*fps);
- for(let i=0;i<total&&!fail;i++){const t=from+i/fps;film.render(Math.min(t,END-1e-3),SHOTS);out.render(film.canvas,STYLE,t,fade(t));const fr=new VideoFrame(canvas,{timestamp:Math.round(i*1e6/fps),duration:Math.round(1e6/fps)});enc.encode(fr,{keyFrame:i%(fps*2)===0});fr.close();
+ for(let i=0;i<total&&!fail;i++){const t=from+i/fps;film.render(Math.min(t,END-1e-3),SHOTS);out.render(film.canvas,STYLE,t,fade(t));toI420(out.g,W,H,rgba,yuv);const fr=new VideoFrame(yuv,{format:'I420',codedWidth:W,codedHeight:H,colorSpace:CS,timestamp:Math.round(i*1e6/fps),duration:Math.round(1e6/fps)});enc.encode(fr,{keyFrame:i%(fps*2)===0});fr.close();
   if(enc.encodeQueueSize>4)await new Promise(r=>{const f=()=>{if(enc.encodeQueueSize<=2){enc.removeEventListener('dequeue',f);r();}};enc.addEventListener('dequeue',f);});
   if(i%15===0){$('status').textContent=`Cuadro ${i+1} de ${total}`;$('progBar').style.width=(i/total*100)+'%';await new Promise(r=>setTimeout(r));}}
  await enc.flush();enc.close();if(fail)throw fail;muxer.finalize();return sink.blob;
